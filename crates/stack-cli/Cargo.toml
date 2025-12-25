@@ -1,0 +1,40 @@
+[package]
+name = "stack-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "CLI for Stack - stacked diffs for Git"
+
+[[bin]]
+name = "gt"
+path = "src/main.rs"
+
+[dependencies]
+stack-core = { path = "../stack-core" }
+stack-github = { path = "../stack-github" }
+
+# Async
+tokio = { workspace = true }
+
+# CLI
+clap = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Terminal
+colored = { workspace = true }
+dialoguer = { workspace = true }
+indicatif = { workspace = true }
+console = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

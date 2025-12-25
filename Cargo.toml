@@ -1,0 +1,64 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/stack-core",
+    "crates/stack-github",
+    "crates/stack-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/dipankar/stack"
+authors = ["Dipankar <dipankar@example.com>"]
+
+[workspace.dependencies]
+# Async runtime
+tokio = { version = "1.41", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+
+# CLI
+clap = { version = "4.5", features = ["derive", "env"] }
+
+# Git
+git2 = "0.19"
+
+# HTTP/API
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+graphql_client = "0.14"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Utilities
+uuid = { version = "1.11", features = ["v4", "serde"] }
+regex = "1.10"
+dirs = "5.0"
+shellexpand = "3.1"
+
+# Terminal
+colored = "2.1"
+dialoguer = "0.11"
+indicatif = "0.17"
+console = "0.15"
+
+# Testing
+tempfile = "3.8"
+
+[profile.release]
+lto = true
+strip = true
+codegen-units = 1
