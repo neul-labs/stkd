@@ -29,9 +29,9 @@ pub async fn execute(args: InfoArgs) -> Result<()> {
         println!("Children: {}", info.children.join(", "));
     }
 
-    if let Some(pr) = info.pr_number {
+    if let Some(pr) = info.merge_request_id {
         println!("PR: #{}", pr);
-        if let Some(ref url) = info.pr_url {
+        if let Some(ref url) = info.merge_request_url {
             println!("URL: {}", url);
         }
     }

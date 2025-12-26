@@ -20,3 +20,7 @@ pub mod continue_cmd;
 pub mod abort;
 pub mod auth;
 pub mod config;
+pub mod squash;
+pub mod fold;
+pub mod split;
+pub mod completions;

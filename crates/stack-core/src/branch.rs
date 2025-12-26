@@ -1,4 +1,7 @@
 //! Branch tracking and metadata
+//!
+//! This module defines the branch information structures used by Stack
+//! to track branch relationships and their associated merge requests.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -16,13 +19,26 @@ pub struct BranchInfo {
     #[serde(default)]
     pub children: Vec<String>,
 
-    /// Associated pull request number
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub pr_number: Option<u64>,
+    /// Associated merge request ID (PR number, MR IID, etc.)
+    /// This is the provider-agnostic identifier for the merge request.
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        alias = "pr_number"
+    )]
+    pub merge_request_id: Option<u64>,
 
-    /// Pull request URL
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub pr_url: Option<String>,
+    /// Merge request URL
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        alias = "pr_url"
+    )]
+    pub merge_request_url: Option<String>,
+
+    /// Provider that hosts this merge request (github, gitlab, gitea, etc.)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub provider: Option<String>,
 
     /// Commit at the base of this branch (parent's HEAD when created)
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -50,11 +66,11 @@ pub struct BranchInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 
-    /// Review status from GitHub
+    /// Review status from the provider
     #[serde(skip_serializing_if = "Option::is_none")]
     pub review_status: Option<ReviewStatus>,
 
-    /// CI status
+    /// CI/Pipeline status
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ci_status: Option<CiStatus>,
 }
@@ -67,8 +83,9 @@ impl BranchInfo {
             name: name.into(),
             parent: parent.into(),
             children: vec![],
-            pr_number: None,
-            pr_url: None,
+            merge_request_id: None,
+            merge_request_url: None,
+            provider: None,
             base_commit: None,
             head_commit: None,
             created_at: now,
@@ -81,9 +98,15 @@ impl BranchInfo {
         }
     }
 
-    /// Check if this branch has an associated PR
+    /// Check if this branch has an associated merge request (PR/MR)
+    pub fn has_merge_request(&self) -> bool {
+        self.merge_request_id.is_some()
+    }
+
+    /// Check if this branch has an associated PR (alias for has_merge_request)
+    #[deprecated(note = "Use has_merge_request() instead")]
     pub fn has_pr(&self) -> bool {
-        self.pr_number.is_some()
+        self.has_merge_request()
     }
 
     /// Add a child branch
@@ -104,24 +127,59 @@ impl BranchInfo {
         self.updated_at = Utc::now();
     }
 
-    /// Set PR info
-    pub fn set_pr(&mut self, number: u64, url: impl Into<String>) {
-        self.pr_number = Some(number);
-        self.pr_url = Some(url.into());
+    /// Set merge request info
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - The merge request ID (PR number, MR IID)
+    /// * `url` - The web URL to the merge request
+    /// * `provider` - The provider name (e.g., "github", "gitlab")
+    pub fn set_merge_request(
+        &mut self,
+        id: u64,
+        url: impl Into<String>,
+        provider: impl Into<String>,
+    ) {
+        self.merge_request_id = Some(id);
+        self.merge_request_url = Some(url.into());
+        self.provider = Some(provider.into());
         self.touch();
     }
 
-    /// Clear PR info
-    pub fn clear_pr(&mut self) {
-        self.pr_number = None;
-        self.pr_url = None;
+    /// Set PR info (alias for set_merge_request with GitHub as provider)
+    #[deprecated(note = "Use set_merge_request() instead")]
+    pub fn set_pr(&mut self, number: u64, url: impl Into<String>) {
+        self.set_merge_request(number, url, "github");
+    }
+
+    /// Clear merge request info
+    pub fn clear_merge_request(&mut self) {
+        self.merge_request_id = None;
+        self.merge_request_url = None;
+        self.provider = None;
         self.touch();
+    }
+
+    /// Clear PR info (alias for clear_merge_request)
+    #[deprecated(note = "Use clear_merge_request() instead")]
+    pub fn clear_pr(&mut self) {
+        self.clear_merge_request();
     }
 
     /// Update head commit
     pub fn set_head(&mut self, commit: impl Into<String>) {
         self.head_commit = Some(commit.into());
         self.touch();
+    }
+
+    /// Get the merge request ID (alias for merge_request_id field)
+    pub fn mr_id(&self) -> Option<u64> {
+        self.merge_request_id
+    }
+
+    /// Get the merge request URL (alias for merge_request_url field)
+    pub fn mr_url(&self) -> Option<&str> {
+        self.merge_request_url.as_deref()
     }
 }
 
@@ -244,8 +302,15 @@ impl<'a> Branch<'a> {
         self.info
     }
 
+    /// Get the merge request ID (PR number, MR IID)
+    pub fn merge_request_id(&self) -> Option<u64> {
+        self.info.merge_request_id
+    }
+
+    /// Alias for merge_request_id for backward compatibility
+    #[deprecated(note = "Use merge_request_id() instead")]
     pub fn pr_number(&self) -> Option<u64> {
-        self.info.pr_number
+        self.merge_request_id()
     }
 
     pub fn status(&self) -> BranchStatus {
@@ -271,7 +336,7 @@ mod tests {
         assert_eq!(info.name, "feature/test");
         assert_eq!(info.parent, "main");
         assert!(info.children.is_empty());
-        assert!(!info.has_pr());
+        assert!(!info.has_merge_request());
     }
 
     #[test]
@@ -287,12 +352,55 @@ mod tests {
     }
 
     #[test]
-    fn test_branch_set_pr() {
+    fn test_branch_set_merge_request() {
         let mut info = BranchInfo::new("feature/test", "main");
-        assert!(!info.has_pr());
+        assert!(!info.has_merge_request());
 
-        info.set_pr(42, "https://github.com/owner/repo/pull/42");
-        assert!(info.has_pr());
-        assert_eq!(info.pr_number, Some(42));
+        info.set_merge_request(42, "https://github.com/owner/repo/pull/42", "github");
+        assert!(info.has_merge_request());
+        assert_eq!(info.merge_request_id, Some(42));
+        assert_eq!(info.provider, Some("github".to_string()));
+    }
+
+    #[test]
+    fn test_branch_clear_merge_request() {
+        let mut info = BranchInfo::new("feature/test", "main");
+        info.set_merge_request(42, "https://gitlab.com/group/repo/-/merge_requests/42", "gitlab");
+        assert!(info.has_merge_request());
+
+        info.clear_merge_request();
+        assert!(!info.has_merge_request());
+        assert!(info.provider.is_none());
+    }
+
+    #[test]
+    fn test_branch_mr_accessors() {
+        let mut info = BranchInfo::new("feature/test", "main");
+        info.set_merge_request(123, "https://example.com/mr/123", "gitlab");
+
+        assert_eq!(info.mr_id(), Some(123));
+        assert_eq!(info.mr_url(), Some("https://example.com/mr/123"));
+    }
+
+    #[test]
+    fn test_backward_compat_serde() {
+        // Test that old JSON format with pr_number and pr_url is still readable
+        let json = r#"{
+            "name": "feature/old",
+            "parent": "main",
+            "children": [],
+            "pr_number": 99,
+            "pr_url": "https://github.com/old/repo/pull/99",
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z",
+            "status": "submitted"
+        }"#;
+
+        let info: BranchInfo = serde_json::from_str(json).expect("Should parse old format");
+        assert_eq!(info.merge_request_id, Some(99));
+        assert_eq!(
+            info.merge_request_url,
+            Some("https://github.com/old/repo/pull/99".to_string())
+        );
     }
 }

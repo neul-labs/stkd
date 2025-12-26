@@ -11,13 +11,22 @@ path = "src/main.rs"
 
 [dependencies]
 stack-core = { path = "../stack-core" }
+stack-provider-api = { path = "../stack-provider-api" }
 stack-github = { path = "../stack-github" }
+stack-gitlab = { path = "../stack-gitlab" }
+
+# Git
+git2 = { workspace = true }
+
+# URL parsing
+url = { workspace = true }
 
 # Async
 tokio = { workspace = true }
 
 # CLI
 clap = { workspace = true }
+clap_complete = { workspace = true }
 
 # Serialization
 serde = { workspace = true }

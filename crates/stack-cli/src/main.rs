@@ -3,11 +3,13 @@
 //! A Graphite-compatible CLI for managing stacked pull requests.
 
 use anyhow::Result;
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
+use clap_complete::Shell;
 use tracing_subscriber::EnvFilter;
 
 mod commands;
 mod output;
+mod provider_context;
 
 use commands::*;
 
@@ -97,6 +99,15 @@ enum Commands {
     /// Amend the current branch
     Modify(modify::ModifyArgs),
 
+    /// Squash commits in the current branch
+    Squash(squash::SquashArgs),
+
+    /// Fold staged changes into a previous commit
+    Fold(fold::FoldArgs),
+
+    /// Split the current commit into multiple commits
+    Split(split::SplitArgs),
+
     // ========================================================================
     // Synchronization
     // ========================================================================
@@ -129,6 +140,13 @@ enum Commands {
 
     /// View or edit configuration
     Config(config::ConfigArgs),
+
+    /// Generate shell completions
+    Completions {
+        /// Shell to generate completions for
+        #[arg(value_enum)]
+        shell: Shell,
+    },
 }
 
 #[tokio::main]
@@ -179,6 +197,9 @@ async fn main() -> Result<()> {
 
         // Editing
         Commands::Modify(args) => modify::execute(args).await,
+        Commands::Squash(args) => squash::execute(args).await,
+        Commands::Fold(args) => fold::execute(args).await,
+        Commands::Split(args) => split::execute(args).await,
 
         // Synchronization
         Commands::Sync(args) => sync::execute(args).await,
@@ -193,6 +214,12 @@ async fn main() -> Result<()> {
         // Configuration
         Commands::Auth(args) => auth::execute(args).await,
         Commands::Config(args) => config::execute(args).await,
+
+        // Shell Completions
+        Commands::Completions { shell } => {
+            let mut cmd = Cli::command();
+            completions::execute(completions::CompletionsArgs { shell }, &mut cmd)
+        }
     };
 
     if let Err(e) = result {

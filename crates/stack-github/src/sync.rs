@@ -1,7 +1,7 @@
 //! Remote synchronization
 
 use anyhow::Result;
-use stack_core::{Repository, BranchInfo};
+use stack_core::Repository;
 use tracing::info;
 
 use crate::api::GitHubClient;
@@ -53,8 +53,9 @@ impl<'a> RemoteSync<'a> {
         if let Some(pr) = prs.first() {
             // Update local info with PR data
             self.repo.storage().update_branch(branch_name, |info| {
-                info.pr_number = Some(pr.number);
-                info.pr_url = Some(pr.html_url.clone());
+                info.merge_request_id = Some(pr.number);
+                info.merge_request_url = Some(pr.html_url.clone());
+                info.provider = Some("github".to_string());
 
                 match pr.state {
                     PrState::Open => {
@@ -72,11 +73,12 @@ impl<'a> RemoteSync<'a> {
             })?;
 
             result.synced_branches.push(branch_name.to_string());
-        } else if local_info.pr_number.is_some() {
+        } else if local_info.merge_request_id.is_some() {
             // PR was closed/merged, clear it
             self.repo.storage().update_branch(branch_name, |info| {
-                info.pr_number = None;
-                info.pr_url = None;
+                info.merge_request_id = None;
+                info.merge_request_url = None;
+                info.provider = None;
             })?;
         }
 
@@ -110,7 +112,7 @@ impl<'a> RemoteSync<'a> {
         let mut callbacks = git2::RemoteCallbacks::new();
 
         // Use credential helper
-        callbacks.credentials(|_url, username, allowed| {
+        callbacks.credentials(|_url, username, _allowed| {
             git2::Cred::ssh_key_from_agent(username.unwrap_or("git"))
         });
 
@@ -160,10 +162,10 @@ impl<'a> RemoteSync<'a> {
         let branches = self.repo.storage().list_branches()?;
 
         for branch in branches {
-            if let Some(pr_num) = branch.pr_number {
+            if let Some(mr_id) = branch.merge_request_id {
                 let pr = self
                     .client
-                    .get_pr(&self.owner, &self.repo_name, pr_num)
+                    .get_pr(&self.owner, &self.repo_name, mr_id)
                     .await?;
 
                 if pr.state == PrState::Closed && pr.mergeable == Some(true) {

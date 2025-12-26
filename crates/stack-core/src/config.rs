@@ -1,9 +1,13 @@
 //! Configuration for Stack
+//!
+//! This module defines the configuration structures for Stack, including
+//! provider configuration for GitHub, GitLab, and other Git hosting platforms.
 
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// Version of the config schema
-pub const CONFIG_VERSION: u32 = 1;
+pub const CONFIG_VERSION: u32 = 2;
 
 /// Main Stack configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -20,7 +24,12 @@ pub struct StackConfig {
     #[serde(default = "default_remote")]
     pub remote: String,
 
-    /// GitHub configuration
+    /// Provider configuration (new unified format)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub provider: Option<ProviderConfig>,
+
+    /// GitHub configuration (legacy, for backward compatibility)
+    /// This will be migrated to `provider` on first load
     #[serde(skip_serializing_if = "Option::is_none")]
     pub github: Option<GitHubConfig>,
 
@@ -43,6 +52,7 @@ impl Default for StackConfig {
             version: CONFIG_VERSION,
             trunk: "main".to_string(),
             remote: "origin".to_string(),
+            provider: None,
             github: None,
             submit: SubmitConfig::default(),
             sync: SyncConfig::default(),
@@ -73,14 +83,56 @@ impl StackConfig {
             }
         }
 
-        // Try to detect GitHub info from remote URL
+        // Try to detect provider info from remote URL
         if let Ok(remote) = repo.find_remote(&config.remote) {
             if let Some(url) = remote.url() {
-                config.github = GitHubConfig::from_remote_url(url);
+                config.provider = ProviderConfig::from_remote_url(url);
             }
         }
 
         config
+    }
+
+    /// Migrate legacy configuration to the new format.
+    ///
+    /// This converts the old `github` field to the new `provider` field.
+    /// Should be called when loading configs with version < 2.
+    pub fn migrate(&mut self) {
+        // Migrate legacy github config to provider config
+        if self.provider.is_none() {
+            if let Some(github) = self.github.take() {
+                self.provider = Some(ProviderConfig {
+                    provider_type: ProviderType::GitHub,
+                    owner: Some(github.owner),
+                    repo: Some(github.repo),
+                    api_url: github.api_url,
+                    web_url: None,
+                    host: Some("github.com".to_string()),
+                });
+                self.version = CONFIG_VERSION;
+            }
+        }
+    }
+
+    /// Get the effective provider configuration.
+    ///
+    /// This returns the provider config, falling back to converting
+    /// the legacy github config if necessary.
+    pub fn effective_provider(&self) -> Option<ProviderConfig> {
+        if let Some(ref provider) = self.provider {
+            Some(provider.clone())
+        } else if let Some(ref github) = self.github {
+            Some(ProviderConfig {
+                provider_type: ProviderType::GitHub,
+                owner: Some(github.owner.clone()),
+                repo: Some(github.repo.clone()),
+                api_url: github.api_url.clone(),
+                web_url: None,
+                host: Some("github.com".to_string()),
+            })
+        } else {
+            None
+        }
     }
 }
 
@@ -132,6 +184,213 @@ impl GitHubConfig {
 
         None
     }
+}
+
+/// Supported Git hosting providers
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum ProviderType {
+    /// Auto-detect from remote URL
+    #[default]
+    Auto,
+    /// GitHub (github.com or GitHub Enterprise)
+    GitHub,
+    /// GitLab (gitlab.com or self-hosted)
+    GitLab,
+    /// Gitea (self-hosted)
+    Gitea,
+}
+
+impl ProviderType {
+    /// Detect provider type from a remote URL
+    pub fn from_remote_url(url: &str) -> Self {
+        let url_lower = url.to_lowercase();
+
+        if url_lower.contains("github.com") || url_lower.contains("github") {
+            ProviderType::GitHub
+        } else if url_lower.contains("gitlab.com") || url_lower.contains("gitlab") {
+            ProviderType::GitLab
+        } else if url_lower.contains("gitea") || url_lower.contains("codeberg") {
+            ProviderType::Gitea
+        } else {
+            // Default to GitHub for unknown providers (most common)
+            ProviderType::GitHub
+        }
+    }
+
+    /// Get the default API URL for cloud instances
+    pub fn default_api_url(&self) -> Option<&'static str> {
+        match self {
+            ProviderType::GitHub => Some("https://api.github.com"),
+            ProviderType::GitLab => Some("https://gitlab.com/api/v4"),
+            ProviderType::Gitea => None, // No default, must be specified
+            ProviderType::Auto => None,
+        }
+    }
+
+    /// Get the default web URL for cloud instances
+    pub fn default_web_url(&self) -> Option<&'static str> {
+        match self {
+            ProviderType::GitHub => Some("https://github.com"),
+            ProviderType::GitLab => Some("https://gitlab.com"),
+            ProviderType::Gitea => None,
+            ProviderType::Auto => None,
+        }
+    }
+
+    /// Get the default host for cloud instances
+    pub fn default_host(&self) -> Option<&'static str> {
+        match self {
+            ProviderType::GitHub => Some("github.com"),
+            ProviderType::GitLab => Some("gitlab.com"),
+            ProviderType::Gitea => None,
+            ProviderType::Auto => None,
+        }
+    }
+
+    /// Get the internal name of this provider
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            ProviderType::Auto => "auto",
+            ProviderType::GitHub => "github",
+            ProviderType::GitLab => "gitlab",
+            ProviderType::Gitea => "gitea",
+        }
+    }
+
+    /// Get the display name of this provider
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            ProviderType::Auto => "Auto",
+            ProviderType::GitHub => "GitHub",
+            ProviderType::GitLab => "GitLab",
+            ProviderType::Gitea => "Gitea",
+        }
+    }
+}
+
+impl fmt::Display for ProviderType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.display_name())
+    }
+}
+
+/// Provider configuration (unified format for all providers)
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ProviderConfig {
+    /// Provider type (auto-detected if not specified)
+    #[serde(default, rename = "type")]
+    pub provider_type: ProviderType,
+
+    /// Repository owner (user or organization)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub owner: Option<String>,
+
+    /// Repository name
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub repo: Option<String>,
+
+    /// API base URL (for self-hosted instances)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub api_url: Option<String>,
+
+    /// Web base URL (for self-hosted instances, if different from API)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub web_url: Option<String>,
+
+    /// Host identifier (for credential lookup, e.g., "github.com", "gitlab.mycompany.com")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub host: Option<String>,
+}
+
+impl ProviderConfig {
+    /// Create a new provider config from a remote URL
+    pub fn from_remote_url(url: &str) -> Option<Self> {
+        let (owner, repo, host) = parse_remote_url(url)?;
+        let provider_type = ProviderType::from_remote_url(url);
+
+        Some(Self {
+            provider_type,
+            owner: Some(owner),
+            repo: Some(repo),
+            api_url: None, // Use defaults for cloud
+            web_url: None,
+            host: Some(host),
+        })
+    }
+
+    /// Get the effective API URL
+    pub fn effective_api_url(&self) -> Option<String> {
+        self.api_url
+            .clone()
+            .or_else(|| self.provider_type.default_api_url().map(String::from))
+    }
+
+    /// Get the effective web URL
+    pub fn effective_web_url(&self) -> Option<String> {
+        self.web_url
+            .clone()
+            .or_else(|| self.provider_type.default_web_url().map(String::from))
+    }
+
+    /// Get the effective host for credential lookup
+    pub fn effective_host(&self) -> String {
+        self.host.clone().unwrap_or_else(|| {
+            self.provider_type
+                .default_host()
+                .unwrap_or("unknown")
+                .to_string()
+        })
+    }
+
+    /// Get the full repository name (owner/repo)
+    pub fn full_name(&self) -> Option<String> {
+        match (&self.owner, &self.repo) {
+            (Some(owner), Some(repo)) => Some(format!("{}/{}", owner, repo)),
+            _ => None,
+        }
+    }
+}
+
+/// Parse a remote URL into (owner, repo, host)
+fn parse_remote_url(url: &str) -> Option<(String, String, String)> {
+    // Handle SSH format: git@host:owner/repo.git
+    if let Some(rest) = url.strip_prefix("git@") {
+        let parts: Vec<&str> = rest.splitn(2, ':').collect();
+        if parts.len() == 2 {
+            let host = parts[0].to_string();
+            let path = parts[1].strip_suffix(".git").unwrap_or(parts[1]);
+            let path_parts: Vec<&str> = path.split('/').collect();
+            if path_parts.len() >= 2 {
+                return Some((
+                    path_parts[0].to_string(),
+                    path_parts[1].to_string(),
+                    host,
+                ));
+            }
+        }
+    }
+
+    // Handle HTTPS format: https://host/owner/repo.git
+    let url_without_scheme = url
+        .strip_prefix("https://")
+        .or_else(|| url.strip_prefix("http://"))?;
+
+    let parts: Vec<&str> = url_without_scheme.splitn(2, '/').collect();
+    if parts.len() == 2 {
+        let host = parts[0].to_string();
+        let path = parts[1].strip_suffix(".git").unwrap_or(parts[1]);
+        let path_parts: Vec<&str> = path.split('/').collect();
+        if path_parts.len() >= 2 {
+            return Some((
+                path_parts[0].to_string(),
+                path_parts[1].to_string(),
+                host,
+            ));
+        }
+    }
+
+    None
 }
 
 /// Configuration for PR submission
@@ -282,5 +541,158 @@ mod tests {
         assert_eq!(config.remote, "origin");
         assert!(!config.submit.draft);
         assert!(config.submit.auto_title);
+    }
+
+    #[test]
+    fn test_provider_type_from_github_url() {
+        assert_eq!(
+            ProviderType::from_remote_url("git@github.com:owner/repo.git"),
+            ProviderType::GitHub
+        );
+        assert_eq!(
+            ProviderType::from_remote_url("https://github.com/owner/repo.git"),
+            ProviderType::GitHub
+        );
+    }
+
+    #[test]
+    fn test_provider_type_from_gitlab_url() {
+        assert_eq!(
+            ProviderType::from_remote_url("git@gitlab.com:owner/repo.git"),
+            ProviderType::GitLab
+        );
+        assert_eq!(
+            ProviderType::from_remote_url("https://gitlab.mycompany.com/group/project.git"),
+            ProviderType::GitLab
+        );
+    }
+
+    #[test]
+    fn test_provider_type_from_gitea_url() {
+        assert_eq!(
+            ProviderType::from_remote_url("https://codeberg.org/owner/repo.git"),
+            ProviderType::Gitea
+        );
+    }
+
+    #[test]
+    fn test_provider_config_from_github_ssh() {
+        let config = ProviderConfig::from_remote_url("git@github.com:owner/repo.git");
+        assert!(config.is_some());
+        let config = config.unwrap();
+        assert_eq!(config.provider_type, ProviderType::GitHub);
+        assert_eq!(config.owner, Some("owner".to_string()));
+        assert_eq!(config.repo, Some("repo".to_string()));
+        assert_eq!(config.host, Some("github.com".to_string()));
+    }
+
+    #[test]
+    fn test_provider_config_from_gitlab_https() {
+        let config = ProviderConfig::from_remote_url("https://gitlab.com/group/project.git");
+        assert!(config.is_some());
+        let config = config.unwrap();
+        assert_eq!(config.provider_type, ProviderType::GitLab);
+        assert_eq!(config.owner, Some("group".to_string()));
+        assert_eq!(config.repo, Some("project".to_string()));
+        assert_eq!(config.host, Some("gitlab.com".to_string()));
+    }
+
+    #[test]
+    fn test_provider_config_effective_urls() {
+        let config = ProviderConfig {
+            provider_type: ProviderType::GitHub,
+            owner: Some("owner".to_string()),
+            repo: Some("repo".to_string()),
+            api_url: None,
+            web_url: None,
+            host: None,
+        };
+
+        assert_eq!(
+            config.effective_api_url(),
+            Some("https://api.github.com".to_string())
+        );
+        assert_eq!(
+            config.effective_web_url(),
+            Some("https://github.com".to_string())
+        );
+        assert_eq!(config.effective_host(), "github.com");
+    }
+
+    #[test]
+    fn test_provider_config_custom_urls() {
+        let config = ProviderConfig {
+            provider_type: ProviderType::GitLab,
+            owner: Some("owner".to_string()),
+            repo: Some("repo".to_string()),
+            api_url: Some("https://gitlab.mycompany.com/api/v4".to_string()),
+            web_url: Some("https://gitlab.mycompany.com".to_string()),
+            host: Some("gitlab.mycompany.com".to_string()),
+        };
+
+        assert_eq!(
+            config.effective_api_url(),
+            Some("https://gitlab.mycompany.com/api/v4".to_string())
+        );
+        assert_eq!(config.effective_host(), "gitlab.mycompany.com");
+    }
+
+    #[test]
+    fn test_config_migration() {
+        let mut config = StackConfig {
+            version: 1,
+            trunk: "main".to_string(),
+            remote: "origin".to_string(),
+            provider: None,
+            github: Some(GitHubConfig {
+                owner: "oldowner".to_string(),
+                repo: "oldrepo".to_string(),
+                api_url: None,
+            }),
+            submit: SubmitConfig::default(),
+            sync: SyncConfig::default(),
+            vcs: None,
+        };
+
+        config.migrate();
+
+        assert!(config.provider.is_some());
+        assert!(config.github.is_none()); // Should be consumed
+        assert_eq!(config.version, CONFIG_VERSION);
+
+        let provider = config.provider.unwrap();
+        assert_eq!(provider.provider_type, ProviderType::GitHub);
+        assert_eq!(provider.owner, Some("oldowner".to_string()));
+        assert_eq!(provider.repo, Some("oldrepo".to_string()));
+    }
+
+    #[test]
+    fn test_effective_provider_with_legacy() {
+        let config = StackConfig {
+            version: 1,
+            trunk: "main".to_string(),
+            remote: "origin".to_string(),
+            provider: None,
+            github: Some(GitHubConfig {
+                owner: "legacyowner".to_string(),
+                repo: "legacyrepo".to_string(),
+                api_url: None,
+            }),
+            submit: SubmitConfig::default(),
+            sync: SyncConfig::default(),
+            vcs: None,
+        };
+
+        let effective = config.effective_provider();
+        assert!(effective.is_some());
+        let effective = effective.unwrap();
+        assert_eq!(effective.owner, Some("legacyowner".to_string()));
+    }
+
+    #[test]
+    fn test_provider_type_display() {
+        assert_eq!(ProviderType::GitHub.to_string(), "GitHub");
+        assert_eq!(ProviderType::GitLab.to_string(), "GitLab");
+        assert_eq!(ProviderType::Gitea.to_string(), "Gitea");
     }
 }

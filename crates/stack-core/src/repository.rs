@@ -1,4 +1,45 @@
-//! Repository wrapper for Stack operations
+//! Repository wrapper for Stack operations.
+//!
+//! This module provides the main entry point for Stack operations. The [`Repository`]
+//! struct wraps a Git repository and adds stacked branch management functionality.
+//!
+//! # Overview
+//!
+//! A Stack-enabled repository maintains:
+//! - Branch tracking metadata (parent-child relationships)
+//! - Configuration (trunk branch, provider settings)
+//! - Merge request associations
+//!
+//! # Example
+//!
+//! ```rust,ignore
+//! use stack_core::Repository;
+//!
+//! // Open an existing Stack-enabled repository
+//! let repo = Repository::open(".")?;
+//!
+//! // Create a new branch on top of current
+//! let branch = repo.create_branch("feature/login")?;
+//! println!("Created {} with parent {}", branch.name, branch.parent);
+//!
+//! // Navigate the stack
+//! repo.up(1)?;  // Move to child branch
+//! repo.down(1)?; // Move to parent branch
+//! repo.top()?;   // Go to stack tip
+//! repo.bottom()?; // Go to stack root
+//! ```
+//!
+//! # Initialization
+//!
+//! Before using Stack features, a repository must be initialized:
+//!
+//! ```rust,ignore
+//! use stack_core::Repository;
+//!
+//! // Initialize Stack in an existing Git repo
+//! let repo = Repository::init(".")?;
+//! println!("Trunk branch: {}", repo.trunk());
+//! ```
 
 use std::path::Path;
 
@@ -12,7 +53,32 @@ use crate::stack::Stack;
 use crate::storage::Storage;
 use crate::{Error, Result};
 
-/// Stack-enabled Git repository
+/// A Stack-enabled Git repository.
+///
+/// This is the main entry point for Stack operations. It wraps a Git repository
+/// and provides methods for:
+///
+/// - Creating and managing stacked branches
+/// - Navigating between branches in a stack
+/// - Tracking branch metadata and PR associations
+/// - Loading and modifying stack configuration
+///
+/// # Thread Safety
+///
+/// This struct is not thread-safe. Each thread should open its own instance.
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use stack_core::Repository;
+///
+/// let repo = Repository::open(".")?;
+///
+/// // Check current state
+/// println!("Current branch: {:?}", repo.current_branch()?);
+/// println!("Trunk: {}", repo.trunk());
+/// println!("Clean working tree: {}", repo.is_clean()?);
+/// ```
 pub struct Repository {
     /// Underlying Git repository
     git: GitRepo,
@@ -23,7 +89,28 @@ pub struct Repository {
 }
 
 impl Repository {
-    /// Open a Stack-enabled repository
+    /// Open a Stack-enabled repository.
+    ///
+    /// Discovers the Git repository from the given path and loads Stack metadata.
+    /// The path can be anywhere within the repository working tree.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - Path to the repository or any subdirectory within it
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - No Git repository is found at or above the path
+    /// - The repository is not initialized for Stack (run `gt init` first)
+    /// - Stack metadata is corrupted
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// let repo = Repository::open(".")?;
+    /// let repo = Repository::open("/path/to/repo/src/components")?; // Works from subdirectory
+    /// ```
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
         let git = GitRepo::discover(path.as_ref()).map_err(|_| Error::NotARepository)?;
 
@@ -39,7 +126,29 @@ impl Repository {
         Ok(Self { git, storage, config })
     }
 
-    /// Initialize Stack in an existing Git repository
+    /// Initialize Stack in an existing Git repository.
+    ///
+    /// Creates the Stack metadata directory (`.git/stack/`) and auto-detects
+    /// configuration settings like the trunk branch name.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - Path to the repository or any subdirectory within it
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - No Git repository is found
+    /// - Stack is already initialized
+    /// - Cannot create metadata directory
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// // Initialize Stack in the current directory
+    /// let repo = Repository::init(".")?;
+    /// println!("Initialized with trunk: {}", repo.trunk());
+    /// ```
     pub fn init(path: impl AsRef<Path>) -> Result<Self> {
         let git = GitRepo::discover(path.as_ref()).map_err(|_| Error::NotARepository)?;
 
@@ -108,7 +217,37 @@ impl Repository {
     // Branch Operations
     // ========================================================================
 
-    /// Create a new branch on top of the current one
+    /// Create a new branch on top of the current one.
+    ///
+    /// Creates a new Git branch at the current HEAD and sets up Stack tracking
+    /// with the current branch as the parent. The new branch is automatically
+    /// checked out.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - Name for the new branch (e.g., "feature/login")
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Not currently on a branch (detached HEAD)
+    /// - Branch name is invalid
+    /// - Branch already exists
+    /// - Git operations fail
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// let repo = Repository::open(".")?;
+    ///
+    /// // Create a feature branch
+    /// let branch = repo.create_branch("feature/auth")?;
+    /// println!("Created {} with parent {}", branch.name, branch.parent);
+    ///
+    /// // Create a child of the feature branch
+    /// let child = repo.create_branch("feature/auth-tests")?;
+    /// assert_eq!(child.parent, "feature/auth");
+    /// ```
     pub fn create_branch(&self, name: &str) -> Result<BranchInfo> {
         // Validate branch name
         if name.is_empty() || name.contains("..") {
@@ -395,7 +534,25 @@ impl Repository {
     // Stack Operations
     // ========================================================================
 
-    /// Load the branch graph
+    /// Load the branch dependency graph.
+    ///
+    /// Returns a [`BranchGraph`] containing all tracked branches and their
+    /// parent-child relationships. This is useful for visualizing the stack
+    /// structure or determining restack order.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// let repo = Repository::open(".")?;
+    /// let graph = repo.load_graph()?;
+    ///
+    /// // Get all branches in the current stack
+    /// let current = repo.current_branch()?.unwrap();
+    /// let stack = graph.stack(&current);
+    /// for branch in stack {
+    ///     println!("{}", branch);
+    /// }
+    /// ```
     pub fn load_graph(&self) -> Result<BranchGraph> {
         let branches = self.storage.list_branches()?;
         Ok(BranchGraph::from_branches(branches, self.trunk()))
@@ -475,7 +632,8 @@ mod tests {
 
         let info = repo.create_branch("feature/test").unwrap();
         assert_eq!(info.name, "feature/test");
-        assert_eq!(info.parent, "main");
+        // Parent is the trunk branch (may be main or master depending on git config)
+        assert_eq!(info.parent, repo.trunk());
     }
 
     #[test]

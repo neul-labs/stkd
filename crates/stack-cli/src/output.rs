@@ -5,6 +5,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 static QUIET: AtomicBool = AtomicBool::new(false);
 
+/// Arrow symbol for output
+pub const ARROW: &str = "→";
+
 /// Set quiet mode
 pub fn set_quiet(quiet: bool) {
     QUIET.store(quiet, Ordering::SeqCst);
@@ -55,12 +58,20 @@ pub fn branch(name: &str, is_current: bool) -> String {
     }
 }
 
-/// Format a PR number
-pub fn pr_number(num: u64) -> String {
+/// Format a merge request number
+pub fn mr_number(num: u64) -> String {
     format!("{}", format!("#{}", num).cyan())
 }
 
+/// Format a PR number (alias for mr_number)
+#[allow(dead_code)]
+#[deprecated(note = "Use mr_number() instead")]
+pub fn pr_number(num: u64) -> String {
+    mr_number(num)
+}
+
 /// Format a stack with tree structure
+#[allow(dead_code)]
 pub fn format_stack_tree(
     entries: &[(String, bool, usize, Option<u64>)], // (name, is_current, depth, pr_number)
 ) -> String {

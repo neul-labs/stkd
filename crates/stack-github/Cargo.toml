@@ -7,6 +7,10 @@ description = "GitHub integration for Stack"
 
 [dependencies]
 stack-core = { path = "../stack-core" }
+stack-provider-api = { path = "../stack-provider-api" }
+
+# Async traits
+async-trait = { workspace = true }
 
 # Git
 git2 = { workspace = true }
@@ -34,6 +38,7 @@ chrono = { workspace = true }
 
 # Utilities
 dirs = { workspace = true }
+url = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }
