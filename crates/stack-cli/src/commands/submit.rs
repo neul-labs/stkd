@@ -170,23 +170,25 @@ pub async fn execute(args: SubmitArgs) -> Result<()> {
 
     // Push branches first (unless --no-push)
     if !args.no_push {
-        output::info(&format!("Pushing {} branch(es)...", branches.len()));
+        let pb = output::progress_bar(branches.len() as u64, "Pushing branches");
 
         for branch in &branches {
-            output::info(&format!("  {} Pushing {}...", output::ARROW, branch));
+            pb.set_message(format!("Pushing {}", branch));
 
-            let status = std::process::Command::new("git")
+            let result = std::process::Command::new("git")
                 .args(["push", "-u", "origin", branch, "--force-with-lease"])
-                .status()
+                .output()
                 .context("Failed to run git push")?;
 
-            if !status.success() {
-                output::error(&format!("Failed to push {}", branch));
+            if !result.status.success() {
+                output::finish_progress_error(&pb, &format!("Failed to push {}", branch));
                 anyhow::bail!("Push failed for branch '{}'", branch);
             }
 
-            output::success(&format!("Pushed {}", branch));
+            pb.inc(1);
         }
+
+        output::finish_progress(&pb, &format!("Pushed {} branch(es)", branches.len()));
     }
 
     // If push-only, we're done

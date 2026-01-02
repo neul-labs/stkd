@@ -164,6 +164,41 @@ impl Repository {
         Ok(Self { git, storage, config })
     }
 
+    /// Initialize Stack with a custom configuration.
+    ///
+    /// Like [`init`](Self::init), but uses the provided configuration instead
+    /// of auto-detecting settings.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - Path to the repository
+    /// * `config` - The configuration to use
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// use stack_core::{Repository, config::StackConfig};
+    ///
+    /// let mut config = StackConfig::default();
+    /// config.trunk = "develop".to_string();
+    /// config.submit.draft = true;
+    ///
+    /// let repo = Repository::init_with_config(".", config)?;
+    /// ```
+    pub fn init_with_config(path: impl AsRef<Path>, config: StackConfig) -> Result<Self> {
+        let git = GitRepo::discover(path.as_ref()).map_err(|_| Error::NotARepository)?;
+
+        let git_dir = git.path();
+        let storage = Storage::init(git_dir)?;
+
+        // Save the provided configuration
+        storage.save_config(&config)?;
+
+        info!("Initialized Stack with trunk: {}", config.trunk);
+
+        Ok(Self { git, storage, config })
+    }
+
     /// Get the underlying Git repository
     pub fn git(&self) -> &GitRepo {
         &self.git

@@ -57,5 +57,8 @@ md5 = "0.7"
 # WebSocket support
 futures = "0.3"
 
+# Synchronization
+parking_lot = "0.12"
+
 [dev-dependencies]
 tempfile = { workspace = true }

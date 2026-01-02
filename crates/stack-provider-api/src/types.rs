@@ -408,6 +408,39 @@ pub struct MergeRequestFilter {
     pub limit: Option<usize>,
 }
 
+/// Branch protection rules.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct BranchProtection {
+    /// Name or pattern of the protected branch
+    pub pattern: String,
+    /// Whether the branch is protected
+    pub is_protected: bool,
+    /// Requires pull request before merging
+    pub require_pull_request: bool,
+    /// Requires approving reviews
+    pub required_approvals: u32,
+    /// Requires status checks to pass
+    pub require_status_checks: bool,
+    /// Requires linear history (no merge commits)
+    pub require_linear_history: bool,
+    /// Allows force pushes
+    pub allow_force_push: bool,
+    /// Allows deletions
+    pub allow_deletions: bool,
+}
+
+impl BranchProtection {
+    /// Check if this protection prevents force pushes
+    pub fn prevents_force_push(&self) -> bool {
+        self.is_protected && !self.allow_force_push
+    }
+
+    /// Check if this protection prevents deletions
+    pub fn prevents_deletion(&self) -> bool {
+        self.is_protected && !self.allow_deletions
+    }
+}
+
 /// Capabilities supported by a provider.
 ///
 /// Providers set these flags to indicate which features they support.
@@ -431,6 +464,8 @@ pub struct ProviderCapabilities {
     pub rebase_merge: bool,
     /// Supports fast-forward merge (GitLab only)
     pub fast_forward_merge: bool,
+    /// Supports branch protection queries
+    pub branch_protection: bool,
 }
 
 #[cfg(test)]

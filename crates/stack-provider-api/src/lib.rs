@@ -150,11 +150,12 @@ pub use auth::{
 };
 pub use error::{ProviderError, ProviderResult};
 pub use traits::{
-    ApprovalProvider, LabelProvider, MergeRequestProvider, MilestoneProvider, PipelineProvider,
-    Provider, RepositoryProvider, UserProvider,
+    ApprovalProvider, BranchProtectionProvider, LabelProvider, MergeRequestProvider,
+    MilestoneProvider, PipelineProvider, Provider, RepositoryProvider, UserProvider,
 };
 pub use types::{
-    ApprovalState, CreateMergeRequest, Label, MergeMethod, MergeRequest, MergeRequestFilter,
-    MergeRequestId, MergeRequestState, MergeResult, Milestone, MilestoneState, Pipeline,
-    PipelineJob, PipelineStatus, ProviderCapabilities, RepoId, Review, UpdateMergeRequest, User,
+    ApprovalState, BranchProtection, CreateMergeRequest, Label, MergeMethod, MergeRequest,
+    MergeRequestFilter, MergeRequestId, MergeRequestState, MergeResult, Milestone, MilestoneState,
+    Pipeline, PipelineJob, PipelineStatus, ProviderCapabilities, RepoId, Review,
+    UpdateMergeRequest, User,
 };

@@ -307,6 +307,26 @@ pub trait MilestoneProvider: Send + Sync {
     async fn remove_milestone(&self, repo: &RepoId, mr_id: MergeRequestId) -> ProviderResult<()>;
 }
 
+/// Branch protection operations.
+#[async_trait]
+pub trait BranchProtectionProvider: Send + Sync {
+    /// Get branch protection rules for a specific branch.
+    async fn get_branch_protection(
+        &self,
+        repo: &RepoId,
+        branch: &str,
+    ) -> ProviderResult<Option<BranchProtection>>;
+
+    /// Check if a branch is protected.
+    async fn is_branch_protected(&self, repo: &RepoId, branch: &str) -> ProviderResult<bool> {
+        Ok(self
+            .get_branch_protection(repo, branch)
+            .await?
+            .map(|p| p.is_protected)
+            .unwrap_or(false))
+    }
+}
+
 /// User and authentication operations.
 ///
 /// This trait is required for all providers.
@@ -389,6 +409,11 @@ pub trait Provider: MergeRequestProvider + UserProvider + RepositoryProvider {
 
     /// Get the milestone provider if supported.
     fn milestones(&self) -> Option<&dyn MilestoneProvider> {
+        None
+    }
+
+    /// Get the branch protection provider if supported.
+    fn branch_protection(&self) -> Option<&dyn BranchProtectionProvider> {
         None
     }
 }

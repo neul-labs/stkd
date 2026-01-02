@@ -2,14 +2,63 @@
 //!
 //! This module defines the configuration structures for Stack, including
 //! provider configuration for GitHub, GitLab, and other Git hosting platforms.
+//!
+//! # Configuration File
+//!
+//! Stack stores its configuration in `.git/stack/config.json`. The configuration
+//! is automatically created when running `gt init` and includes:
+//!
+//! - Trunk branch name (e.g., "main")
+//! - Remote name (e.g., "origin")
+//! - Provider settings (GitHub, GitLab, etc.)
+//! - Submit and sync preferences
+//!
+//! # Version Migration
+//!
+//! The configuration format has evolved over time. When loading older configs,
+//! Stack automatically migrates them to the current version and saves the result.
+//!
+//! # Example
+//!
+//! ```json
+//! {
+//!   "version": 2,
+//!   "trunk": "main",
+//!   "remote": "origin",
+//!   "provider": {
+//!     "type": "github",
+//!     "owner": "user",
+//!     "repo": "project",
+//!     "host": "github.com"
+//!   },
+//!   "submit": {
+//!     "draft": false,
+//!     "auto_title": true
+//!   }
+//! }
+//! ```
 
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-/// Version of the config schema
+/// Current version of the configuration schema.
+///
+/// When the schema changes, this version is incremented and migration
+/// logic is added to handle older configurations.
 pub const CONFIG_VERSION: u32 = 2;
 
-/// Main Stack configuration
+/// Main Stack configuration.
+///
+/// This struct holds all configuration options for a Stack-enabled repository.
+/// It's stored in `.git/stack/config.json` and created during `gt init`.
+///
+/// # Fields
+///
+/// - `trunk`: The main branch that stacks are built on top of
+/// - `remote`: The Git remote to push to (usually "origin")
+/// - `provider`: Configuration for the Git hosting provider (GitHub, GitLab, etc.)
+/// - `submit`: Options for creating merge/pull requests
+/// - `sync`: Options for syncing with remote
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StackConfig {
     /// Schema version
@@ -136,7 +185,11 @@ impl StackConfig {
     }
 }
 
-/// GitHub-specific configuration
+/// GitHub-specific configuration (legacy format).
+///
+/// This structure is preserved for backward compatibility with v1 configurations.
+/// New configurations use [`ProviderConfig`] instead. When a v1 config is loaded,
+/// it's automatically migrated to use `ProviderConfig`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GitHubConfig {
     /// Repository owner (user or organization)
@@ -186,18 +239,29 @@ impl GitHubConfig {
     }
 }
 
-/// Supported Git hosting providers
+/// Supported Git hosting providers.
+///
+/// Stack supports multiple Git hosting platforms. The provider type determines
+/// which API to use for creating merge requests, checking CI status, etc.
+///
+/// # Auto-Detection
+///
+/// When set to [`Auto`](Self::Auto), Stack will detect the provider from the
+/// remote URL. For example:
+/// - `git@github.com:user/repo.git` → GitHub
+/// - `https://gitlab.com/group/project.git` → GitLab
+/// - `https://codeberg.org/user/repo.git` → Gitea
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum ProviderType {
-    /// Auto-detect from remote URL
+    /// Auto-detect provider from the remote URL.
     #[default]
     Auto,
-    /// GitHub (github.com or GitHub Enterprise)
+    /// GitHub (github.com or GitHub Enterprise).
     GitHub,
-    /// GitLab (gitlab.com or self-hosted)
+    /// GitLab (gitlab.com or self-hosted instances).
     GitLab,
-    /// Gitea (self-hosted)
+    /// Gitea or Codeberg (self-hosted Gitea instances).
     Gitea,
 }
 
@@ -275,7 +339,26 @@ impl fmt::Display for ProviderType {
     }
 }
 
-/// Provider configuration (unified format for all providers)
+/// Provider configuration (unified format for all providers).
+///
+/// This structure holds configuration for any supported Git hosting provider.
+/// It replaces the legacy `GitHubConfig` and provides a unified interface
+/// for GitHub, GitLab, Gitea, and other providers.
+///
+/// # Self-Hosted Instances
+///
+/// For self-hosted instances (GitHub Enterprise, self-hosted GitLab, etc.),
+/// set the `api_url` and optionally `web_url` fields:
+///
+/// ```json
+/// {
+///   "type": "gitlab",
+///   "owner": "myteam",
+///   "repo": "myproject",
+///   "api_url": "https://gitlab.mycompany.com/api/v4",
+///   "host": "gitlab.mycompany.com"
+/// }
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ProviderConfig {
     /// Provider type (auto-detected if not specified)
@@ -393,7 +476,22 @@ fn parse_remote_url(url: &str) -> Option<(String, String, String)> {
     None
 }
 
-/// Configuration for PR submission
+/// Configuration for merge/pull request submission.
+///
+/// These settings control how `gt submit` creates and updates merge requests.
+///
+/// # Example
+///
+/// ```json
+/// {
+///   "submit": {
+///     "draft": true,
+///     "auto_title": true,
+///     "pr_template": true,
+///     "include_stack_info": true
+///   }
+/// }
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SubmitConfig {
     /// Create PRs as draft by default
@@ -429,10 +527,26 @@ impl Default for SubmitConfig {
     }
 }
 
-/// Configuration for sync behavior
+/// Configuration for repository synchronization.
+///
+/// These settings control how `gt sync` behaves when syncing with the remote
+/// repository and cleaning up merged branches.
+///
+/// # Example
+///
+/// ```json
+/// {
+///   "sync": {
+///     "delete_merged": true,
+///     "prompt_delete": false,
+///     "auto_restack": true,
+///     "pull_trunk": true
+///   }
+/// }
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SyncConfig {
-    /// Delete branches after they're merged
+    /// Automatically delete local branches after their MRs are merged.
     #[serde(default = "default_true")]
     pub delete_merged: bool,
 
@@ -460,18 +574,26 @@ impl Default for SyncConfig {
     }
 }
 
-/// VCS integration settings
+/// VCS integration settings for enterprise environments.
+///
+/// These settings control integration with Version Control Systems and
+/// code review policies. This is primarily useful for enterprise environments
+/// with additional policy enforcement requirements.
+///
+/// **Note**: This feature is currently experimental and may change.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VcsIntegration {
-    /// Enable VCS integration
+    /// Enable VCS integration features.
     #[serde(default)]
     pub enabled: bool,
 
-    /// Share intent metadata with VCS
+    /// Share intent metadata with the VCS system.
+    /// When enabled, Stack will communicate branch intent to the VCS.
     #[serde(default)]
     pub share_intent: bool,
 
-    /// Respect VCS policy gates before landing
+    /// Respect VCS policy gates before landing.
+    /// When enabled, `gt land` will check policy gates before merging.
     #[serde(default)]
     pub respect_policy_gates: bool,
 }

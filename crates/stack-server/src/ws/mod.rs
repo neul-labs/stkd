@@ -52,7 +52,7 @@ async fn ws_handler(
 }
 
 /// Handle a WebSocket connection.
-async fn handle_socket(socket: WebSocket, state: AppState) {
+async fn handle_socket(socket: WebSocket, _state: AppState) {
     let (mut sender, mut receiver) = socket.split();
 
     // Create a channel for this connection

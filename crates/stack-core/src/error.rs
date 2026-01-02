@@ -1,11 +1,24 @@
-//! Error types for Stack
+//! Error types for Stack.
+//!
+//! This module defines the error types used throughout the Stack library.
+//! Errors are designed to be user-friendly with clear messages and recovery hints.
+//!
+//! # Error Categories
+//!
+//! - **Recoverable errors**: User can take action to fix (e.g., `RebaseConflict`)
+//! - **Configuration errors**: Issues with setup or configuration
+//! - **Git errors**: Underlying Git operations failed
+//! - **Storage errors**: Failed to read/write Stack metadata
 
 use thiserror::Error;
 
-/// Result type alias for Stack operations
+/// Result type alias for Stack operations.
 pub type Result<T> = std::result::Result<T, Error>;
 
-/// Stack error types
+/// Stack error types.
+///
+/// These errors are designed to provide clear, actionable messages to users.
+/// Use [`Error::hint()`] to get recovery suggestions for recoverable errors.
 #[derive(Error, Debug)]
 pub enum Error {
     /// Not a Git repository
@@ -118,5 +131,37 @@ impl Error {
                 | Error::OperationInProgress(_)
                 | Error::BranchNotTracked(_)
         )
+    }
+
+    /// Get a hint for how to recover from this error.
+    ///
+    /// Returns `Some(hint)` for recoverable errors, `None` otherwise.
+    pub fn hint(&self) -> Option<&'static str> {
+        match self {
+            Error::NotARepository => {
+                Some("Run 'git init' to create a repository, or navigate to an existing one")
+            }
+            Error::NotInitialized => Some("Run 'gt init' to set up Stack in this repository"),
+            Error::BranchNotTracked(_) => {
+                Some("Use 'gt track <branch>' to start tracking this branch")
+            }
+            Error::RebaseConflict(_) => {
+                Some("Resolve the conflicts, stage your changes, then run 'gt continue'")
+            }
+            Error::OperationInProgress(_) => {
+                Some("Run 'gt continue' to resume or 'gt abort' to cancel")
+            }
+            Error::UncommittedChanges => {
+                Some("Commit your changes with 'git commit' or stash them with 'git stash'")
+            }
+            Error::NoParent(_) => {
+                Some("This branch may be the stack root. Use 'gt log' to view the stack")
+            }
+            Error::PrNotFound(_) => Some("Run 'gt submit' to create a pull request"),
+            Error::CycleDetected(_) => {
+                Some("Check your branch relationships with 'gt log' and fix the cycle")
+            }
+            _ => None,
+        }
     }
 }

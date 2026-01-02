@@ -29,11 +29,12 @@ use url::Url;
 
 use crate::auth::GitLabAuth;
 use stack_provider_api::{
-    ApprovalProvider, ApprovalState, CreateMergeRequest, Label, LabelProvider, MergeMethod,
-    MergeRequest, MergeRequestFilter, MergeRequestId, MergeRequestProvider, MergeRequestState,
-    MergeResult, Milestone, MilestoneProvider, MilestoneState, Pipeline,
-    PipelineProvider, PipelineStatus, Provider, ProviderCapabilities, ProviderError,
-    ProviderResult, RepoId, RepositoryProvider, Review, UpdateMergeRequest, User, UserProvider,
+    ApprovalProvider, ApprovalState, BranchProtection, BranchProtectionProvider,
+    CreateMergeRequest, Label, LabelProvider, MergeMethod, MergeRequest, MergeRequestFilter,
+    MergeRequestId, MergeRequestProvider, MergeRequestState, MergeResult, Milestone,
+    MilestoneProvider, MilestoneState, Pipeline, PipelineProvider, PipelineStatus, Provider,
+    ProviderCapabilities, ProviderError, ProviderResult, RepoId, RepositoryProvider, Review,
+    UpdateMergeRequest, User, UserProvider,
 };
 
 /// Default GitLab host.
@@ -1101,6 +1102,7 @@ impl Provider for GitLabProvider {
             squash_merge: true,
             rebase_merge: true,
             fast_forward_merge: true,
+            branch_protection: true,
         }
     }
 
@@ -1118,6 +1120,55 @@ impl Provider for GitLabProvider {
 
     fn milestones(&self) -> Option<&dyn MilestoneProvider> {
         Some(self)
+    }
+
+    fn branch_protection(&self) -> Option<&dyn BranchProtectionProvider> {
+        Some(self)
+    }
+}
+
+// Branch protection implementation
+#[async_trait]
+impl BranchProtectionProvider for GitLabProvider {
+    async fn get_branch_protection(
+        &self,
+        repo: &RepoId,
+        branch: &str,
+    ) -> ProviderResult<Option<BranchProtection>> {
+        let url = self.project_url(
+            repo,
+            &format!("/protected_branches/{}", urlencoding::encode(branch)),
+        );
+
+        // GitLab returns 404 if branch is not protected
+        match self.request::<serde_json::Value>(reqwest::Method::GET, &url).await {
+            Ok(json) => {
+                let protection = BranchProtection {
+                    pattern: json
+                        .get("name")
+                        .and_then(|n| n.as_str())
+                        .unwrap_or(branch)
+                        .to_string(),
+                    is_protected: true,
+                    require_pull_request: true, // Protected branches in GitLab require MRs by default
+                    required_approvals: json
+                        .get("merge_access_levels")
+                        .and_then(|m| m.as_array())
+                        .map(|arr| if arr.is_empty() { 0 } else { 1 })
+                        .unwrap_or(0),
+                    require_status_checks: false, // GitLab handles this differently
+                    require_linear_history: false, // Not a direct GitLab concept
+                    allow_force_push: json
+                        .get("allow_force_push")
+                        .and_then(|a| a.as_bool())
+                        .unwrap_or(false),
+                    allow_deletions: false, // Protected branches can't be deleted by default
+                };
+                Ok(Some(protection))
+            }
+            Err(ProviderError::NotFound(_)) => Ok(None),
+            Err(e) => Err(e),
+        }
     }
 }
 

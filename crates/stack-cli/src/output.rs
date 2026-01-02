@@ -1,12 +1,17 @@
 //! Output formatting for the CLI
 
 use colored::Colorize;
+use indicatif::{ProgressBar, ProgressStyle};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::Duration;
 
 static QUIET: AtomicBool = AtomicBool::new(false);
 
 /// Arrow symbol for output
 pub const ARROW: &str = "→";
+
+/// Checkmark symbol for output
+pub const CHECKMARK: &str = "✓";
 
 /// Set quiet mode
 pub fn set_quiet(quiet: bool) {
@@ -56,6 +61,11 @@ pub fn branch(name: &str, is_current: bool) -> String {
     } else {
         name.to_string()
     }
+}
+
+/// Format text as bold
+pub fn bold(text: &str) -> String {
+    format!("{}", text.bold())
 }
 
 /// Format a merge request number
@@ -143,4 +153,51 @@ pub fn input(msg: &str) -> Option<String> {
         .with_prompt(msg)
         .interact_text()
         .ok()
+}
+
+/// Create a spinner for an indeterminate operation
+pub fn spinner(msg: &str) -> ProgressBar {
+    let pb = ProgressBar::new_spinner();
+    pb.set_style(
+        ProgressStyle::default_spinner()
+            .tick_chars("⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏")
+            .template("{spinner:.cyan} {msg}")
+            .expect("Invalid template"),
+    );
+    pb.set_message(msg.to_string());
+    pb.enable_steady_tick(Duration::from_millis(80));
+    pb
+}
+
+/// Create a progress bar for a determinate operation
+pub fn progress_bar(len: u64, msg: &str) -> ProgressBar {
+    let pb = ProgressBar::new(len);
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template("{msg} [{bar:30.cyan/dim}] {pos}/{len}")
+            .expect("Invalid template")
+            .progress_chars("━━╸"),
+    );
+    pb.set_message(msg.to_string());
+    pb
+}
+
+/// Finish a progress bar with a success message
+pub fn finish_progress(pb: &ProgressBar, msg: &str) {
+    pb.set_style(
+        ProgressStyle::default_spinner()
+            .template("{msg}")
+            .expect("Invalid template"),
+    );
+    pb.finish_with_message(format!("{} {}", "✓".green(), msg));
+}
+
+/// Finish a progress bar with an error message
+pub fn finish_progress_error(pb: &ProgressBar, msg: &str) {
+    pb.set_style(
+        ProgressStyle::default_spinner()
+            .template("{msg}")
+            .expect("Invalid template"),
+    );
+    pb.finish_with_message(format!("{} {}", "✗".red(), msg));
 }

@@ -1,0 +1,108 @@
+site_name: Stack Documentation
+site_description: Stacked Diffs for Git - A Graphite-compatible CLI tool
+site_url: https://stack.dev
+repo_url: https://github.com/dipankar/stack
+repo_name: dipankar/stack
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - tags
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/dipankar/stack
+  generator: false
+
+copyright: Copyright &copy; 2024-2026 Stack Contributors
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quickstart.md
+    - First Stack: getting-started/first-stack.md
+    - Authentication: getting-started/authentication.md
+  - Commands:
+    - Overview: commands/index.md
+    - Stack Management:
+      - create: commands/create.md
+      - delete: commands/delete.md
+      - rename: commands/rename.md
+      - track: commands/track.md
+    - Navigation:
+      - up / down: commands/navigation.md
+      - top / bottom: commands/top-bottom.md
+      - checkout: commands/checkout.md
+      - log: commands/log.md
+    - Workflow:
+      - sync: commands/sync.md
+      - restack: commands/restack.md
+      - submit: commands/submit.md
+      - land: commands/land.md
+    - Editing:
+      - modify: commands/modify.md
+      - squash: commands/squash.md
+      - fold: commands/fold.md
+      - split: commands/split.md
+    - Utilities:
+      - undo / redo: commands/undo-redo.md
+      - config: commands/config.md
+      - auth: commands/auth.md
+  - Guides:
+    - Workflow Patterns: guides/workflows.md
+    - Working with Teams: guides/teams.md
+    - CI/CD Integration: guides/ci-cd.md
+    - Resolving Conflicts: guides/conflicts.md
+    - Tips & Tricks: guides/tips.md
+  - Reference:
+    - Configuration: reference/configuration.md
+    - Environment Variables: reference/environment.md
+    - Providers: reference/providers.md
+    - FAQ: reference/faq.md
+    - Troubleshooting: reference/troubleshooting.md

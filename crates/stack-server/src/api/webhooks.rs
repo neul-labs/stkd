@@ -1,14 +1,14 @@
 //! Webhook handlers for GitHub and GitLab events.
 
 use axum::{
-    extract::{Path, State},
+    extract::State,
     http::HeaderMap,
     routing::post,
     Json, Router,
 };
 use serde::Deserialize;
 
-use crate::error::{ApiError, ApiResult};
+use crate::error::ApiResult;
 use crate::state::AppState;
 
 /// GitHub webhook payload.
@@ -39,6 +39,7 @@ pub struct GitHubRef {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)] // Fields read by serde
 pub struct GitHubRepository {
     full_name: String,
     default_branch: String,
@@ -69,6 +70,7 @@ pub struct GitLabCommit {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)] // Fields read by serde
 pub struct GitLabProject {
     path_with_namespace: String,
     default_branch: String,
@@ -199,7 +201,7 @@ async fn handle_github_pr_event(
 /// Handle GitLab webhook.
 async fn gitlab_webhook(
     State(state): State<AppState>,
-    headers: HeaderMap,
+    _headers: HeaderMap, // TODO: Verify webhook signature
     Json(payload): Json<GitLabWebhook>,
 ) -> ApiResult<Json<serde_json::Value>> {
     tracing::info!("Received GitLab webhook: {}", payload.object_kind);

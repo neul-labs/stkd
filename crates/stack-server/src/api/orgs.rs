@@ -2,7 +2,7 @@
 
 use axum::{
     extract::{Path, State},
-    routing::{delete, get, patch, post},
+    routing::{delete, get},
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
@@ -50,6 +50,7 @@ pub struct MemberResponse {
 
 /// Invite member request.
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)] // Fields are read by serde deserialization
 pub struct InviteMemberRequest {
     username: String,
     role: String,

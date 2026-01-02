@@ -45,15 +45,51 @@ pub struct OAuthProviderConfig {
 
 impl ServerConfig {
     /// Load configuration from environment variables.
+    ///
+    /// # Required Environment Variables
+    ///
+    /// - `JWT_SECRET`: Secret key for JWT signing (required in production)
+    ///
+    /// # Optional Environment Variables
+    ///
+    /// - `HOST`: Server host (default: "0.0.0.0")
+    /// - `PORT`: Server port (default: 3000)
+    /// - `BASE_URL`: Public URL (default: "http://localhost:3000")
+    /// - `JWT_EXPIRY_DAYS`: Token expiry in days (default: 7)
+    /// - `STACK_DEV_MODE`: Set to "1" to allow insecure defaults for development
     pub fn from_env() -> Result<Self> {
         let database = DatabaseConfig::from_env()
             .context("Failed to load database configuration")?;
 
-        let jwt_secret = std::env::var("JWT_SECRET")
-            .unwrap_or_else(|_| {
-                tracing::warn!("JWT_SECRET not set, using insecure default");
-                "insecure-default-jwt-secret-change-in-production".to_string()
-            });
+        let dev_mode = std::env::var("STACK_DEV_MODE").map(|v| v == "1").unwrap_or(false);
+
+        let jwt_secret = match std::env::var("JWT_SECRET") {
+            Ok(secret) => {
+                if secret.len() < 32 {
+                    anyhow::bail!(
+                        "JWT_SECRET must be at least 32 characters for security. \
+                        Current length: {}",
+                        secret.len()
+                    );
+                }
+                secret
+            }
+            Err(_) => {
+                if dev_mode {
+                    tracing::warn!(
+                        "JWT_SECRET not set - using insecure default for development. \
+                        DO NOT use in production!"
+                    );
+                    "insecure-dev-secret-do-not-use-in-production".to_string()
+                } else {
+                    anyhow::bail!(
+                        "JWT_SECRET environment variable is required for security.\n\
+                        Generate one with: openssl rand -base64 32\n\
+                        For development only, set STACK_DEV_MODE=1 to use insecure defaults."
+                    );
+                }
+            }
+        };
 
         let github = match (
             std::env::var("GITHUB_CLIENT_ID"),

@@ -133,6 +133,15 @@ enum Commands {
     Abort(abort::AbortArgs),
 
     // ========================================================================
+    // History
+    // ========================================================================
+    /// Undo the last Stack operation
+    Undo(undo::UndoArgs),
+
+    /// Redo the last undone operation
+    Redo(redo::RedoArgs),
+
+    // ========================================================================
     // Configuration
     // ========================================================================
     /// Authenticate with GitHub
@@ -211,6 +220,10 @@ async fn main() -> Result<()> {
         Commands::Continue(args) => continue_cmd::execute(args).await,
         Commands::Abort(args) => abort::execute(args).await,
 
+        // History
+        Commands::Undo(args) => undo::execute(args).await,
+        Commands::Redo(args) => redo::execute(args).await,
+
         // Configuration
         Commands::Auth(args) => auth::execute(args).await,
         Commands::Config(args) => config::execute(args).await,
@@ -223,7 +236,16 @@ async fn main() -> Result<()> {
     };
 
     if let Err(e) = result {
+        // Display the error
         output::error(&format!("{:#}", e));
+
+        // Check if this is a Stack error with a hint
+        if let Some(stack_err) = e.downcast_ref::<stack_core::Error>() {
+            if let Some(hint) = stack_err.hint() {
+                output::hint(hint);
+            }
+        }
+
         std::process::exit(1);
     }
 

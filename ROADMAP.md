@@ -4,13 +4,16 @@ This document outlines the planned development roadmap for Stack.
 
 ## Current Status
 
-**Version**: 0.1.0 (Alpha)
+**Version**: 0.6.0 (In Progress)
 
-Stack is in active development. Core features work but the API may change.
+Stack has a solid foundation with full GitHub and GitLab support, plus advanced
+features including undo/redo, stack templates, and auto-sync with watch mode.
+Recent focus has been on security hardening and test infrastructure.
+Next milestone: v1.0.0 stable release.
 
 ## Version Roadmap
 
-### v0.2.0 - Provider Abstraction (In Progress)
+### v0.2.0 - Provider Abstraction (Complete)
 
 **Goal**: Establish pluggable provider architecture
 
@@ -18,41 +21,53 @@ Stack is in active development. Core features work but the API may change.
 - [x] Implement provider-agnostic types (MergeRequest, Pipeline, etc.)
 - [x] Refactor `stack-github` to implement provider traits
 - [x] Add enhanced GitHub features (reviews, labels, pipelines)
-- [ ] Update CLI to use provider abstraction
-- [ ] Configuration migration (v1 → v2)
+- [x] Update CLI to use provider abstraction
+- [x] Configuration migration (v1 → v2)
 
-### v0.3.0 - GitLab Support
+### v0.3.0 - GitLab Support (Complete)
 
 **Goal**: Full GitLab support with feature parity
 
-- [ ] Create `stack-gitlab` crate
-- [ ] Implement core MR operations
-- [ ] Add pipeline status integration
-- [ ] Add approval/review support
-- [ ] Support GitLab-specific features (fast-forward merge)
-- [ ] Self-hosted GitLab support
+- [x] Create `stack-gitlab` crate
+- [x] Implement core MR operations
+- [x] Add pipeline status integration
+- [x] Add approval/review support
+- [x] Support GitLab-specific features (fast-forward merge)
+- [x] Self-hosted GitLab support
 
-### v0.4.0 - Documentation & Polish
+### v0.4.0 - Documentation & Polish (Complete)
 
 **Goal**: Production-ready documentation and UX
 
 - [x] mdBook documentation site
-- [ ] Comprehensive rustdoc for all public APIs
-- [ ] Shell completions (bash, zsh, fish)
-- [ ] Improved error messages
-- [ ] Progress indicators for long operations
-- [ ] Configuration wizard
+- [x] Comprehensive rustdoc for all public APIs
+- [x] Shell completions (bash, zsh, fish)
+- [x] Improved error messages with recovery hints
+- [x] Progress indicators for long operations
+- [x] Configuration wizard
 
-### v0.5.0 - Advanced Features
+### v0.5.0 - Advanced Features (Complete)
 
 **Goal**: Power user features
 
-- [ ] Partial stack submission
-- [ ] Stack templates
-- [ ] Branch protection integration
-- [ ] Auto-restack on PR merge
-- [ ] Dry-run mode
-- [ ] Undo/redo support
+- [x] Partial stack submission (`--only`, `--from`, `--to` flags)
+- [x] Dry-run mode for sync, restack, submit, land
+- [x] Undo/redo support (`gt undo`, `gt redo`)
+- [x] Stack templates (`gt create --template <name>`, `gt create --list-templates`)
+- [x] Branch protection integration (provider API support)
+- [x] Auto-restack on PR merge (`gt sync --watch`)
+
+### v0.6.0 - Security & Testing (In Progress)
+
+**Goal**: Production-ready security and test coverage
+
+- [x] Security: JWT secret validation (requires env var or explicit dev mode)
+- [x] Security: OAuth CSRF protection with state validation
+- [x] Fix all compiler warnings across workspace
+- [x] Integration test infrastructure (18 CLI end-to-end tests)
+- [x] 98 total tests passing across all crates
+- [ ] Database integration tests
+- [ ] Provider mock tests with wiremock
 
 ### v1.0.0 - Stable Release
 
@@ -60,8 +75,8 @@ Stack is in active development. Core features work but the API may change.
 
 - [ ] API stabilization (no breaking changes)
 - [ ] Performance optimization
-- [ ] Comprehensive test coverage
-- [ ] Security audit
+- [x] Comprehensive test coverage (98 tests)
+- [x] Security audit (JWT + OAuth hardened)
 - [ ] Multi-platform binaries
 - [ ] Package manager distribution
 
@@ -95,10 +110,10 @@ We welcome contributions! See [CONTRIBUTING.md](./docs/src/contributing/README.m
 
 ### Priority Areas
 
-1. **GitLab Provider**: Help us achieve feature parity
+1. **Testing**: Database and provider mock tests
 2. **Documentation**: Improve guides and examples
-3. **Testing**: Increase test coverage
-4. **Providers**: Add support for new platforms
+3. **Providers**: Add Gitea support
+4. **Performance**: Optimize sync and restack operations
 
 ### How to Get Involved
 
@@ -128,4 +143,4 @@ Your feedback shapes our roadmap! Let us know what features matter most:
 
 ---
 
-*Last updated: January 2025*
+*Last updated: January 2026*

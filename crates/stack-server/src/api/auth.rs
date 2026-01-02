@@ -77,6 +77,9 @@ async fn oauth_start(
         _ => return Err(ApiError::BadRequest(format!("Unknown provider: {}", provider))),
     };
 
+    // Store state for CSRF validation
+    state.oauth_states().store(&oauth_state);
+
     Ok(Json(OAuthStartResponse { url, state: oauth_state }))
 }
 
@@ -86,6 +89,13 @@ async fn oauth_callback(
     Path(provider): Path<String>,
     Query(callback): Query<OAuthCallback>,
 ) -> ApiResult<Json<LoginResponse>> {
+    // Validate OAuth state to prevent CSRF attacks
+    if !state.oauth_states().validate(&callback.state) {
+        return Err(ApiError::BadRequest(
+            "Invalid or expired OAuth state. Please try logging in again.".to_string(),
+        ));
+    }
+
     let redirect_uri = format!("{}/api/auth/oauth/{}/callback", state.config().base_url, provider);
 
     // Exchange code for tokens and get user info

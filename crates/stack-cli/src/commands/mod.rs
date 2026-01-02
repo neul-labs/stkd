@@ -24,3 +24,5 @@ pub mod squash;
 pub mod fold;
 pub mod split;
 pub mod completions;
+pub mod undo;
+pub mod redo;

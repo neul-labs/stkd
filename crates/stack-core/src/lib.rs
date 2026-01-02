@@ -33,6 +33,8 @@ pub mod dag;
 pub mod rebase;
 pub mod storage;
 pub mod repository;
+pub mod history;
+pub mod template;
 
 pub use error::{Error, Result};
 pub use config::{StackConfig, SubmitConfig};
@@ -41,3 +43,5 @@ pub use stack::{Stack, StackEntry};
 pub use dag::BranchGraph;
 pub use storage::Storage;
 pub use repository::Repository;
+pub use history::{History, HistoryEntry};
+pub use template::{StackTemplate, TemplateStore};

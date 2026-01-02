@@ -1,9 +1,28 @@
-//! Storage layer for Stack metadata
+//! Storage layer for Stack metadata.
 //!
-//! Stack stores its metadata in `.git/stack/`:
-//! - `config.json` - Stack configuration
-//! - `state.json` - Current state (active operation, etc.)
-//! - `branches/<name>.json` - Per-branch metadata
+//! This module provides persistent storage for Stack's internal state,
+//! stored in the `.git/stack/` directory.
+//!
+//! # Directory Structure
+//!
+//! ```text
+//! .git/stack/
+//! ├── config.json           # Stack configuration (trunk, provider, etc.)
+//! ├── state.json            # Current operation state
+//! └── branches/
+//!     ├── feature-a.json    # Metadata for 'feature-a' branch
+//!     └── feature-b.json    # Metadata for 'feature-b' branch
+//! ```
+//!
+//! # Usage
+//!
+//! The [`Storage`] struct is the main interface. It's typically accessed
+//! through a [`Repository`](crate::Repository):
+//!
+//! ```rust,ignore
+//! let repo = Repository::open(".")?;
+//! let branches = repo.storage().list_branches()?;
+//! ```
 
 use std::path::{Path, PathBuf};
 use std::fs;
@@ -12,25 +31,31 @@ use crate::branch::BranchInfo;
 use crate::config::StackConfig;
 use crate::{Error, Result};
 
-/// State of any ongoing operation
+/// Current state of a Stack-enabled repository.
+///
+/// This structure tracks the repository's operational state, including
+/// any in-progress operations that can be continued or aborted.
+/// Stored in `.git/stack/state.json`.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct StackState {
-    /// Currently checked out branch
+    /// Currently checked out branch (cached for performance).
     pub current_branch: Option<String>,
 
-    /// Branches that need restacking
+    /// Branches that need restacking after changes to their parents.
     #[serde(default)]
     pub pending_restack: Vec<String>,
 
-    /// Conflict state if in the middle of a rebase
+    /// State of an in-progress rebase that encountered conflicts.
+    /// When set, the user needs to resolve conflicts and run `gt continue`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub conflict_state: Option<ConflictState>,
 
-    /// Last sync with remote
+    /// Timestamp of the last successful sync with the remote.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub last_sync: Option<chrono::DateTime<chrono::Utc>>,
 
-    /// Operation in progress
+    /// An operation that's currently in progress.
+    /// Used to resume operations after conflicts or errors.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub operation: Option<OngoingOperation>,
 }
@@ -47,35 +72,59 @@ impl Default for StackState {
     }
 }
 
-/// State when resolving conflicts
+/// State saved when a rebase encounters conflicts.
+///
+/// When restacking or rebasing encounters a conflict, this state is saved
+/// so the operation can be resumed after the user resolves conflicts.
+///
+/// # Workflow
+///
+/// 1. User runs `gt restack` or `gt sync`
+/// 2. Conflict is detected during rebase
+/// 3. `ConflictState` is saved with the current context
+/// 4. User resolves conflicts and stages changes
+/// 5. User runs `gt continue`
+/// 6. Stack resumes from the saved state
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ConflictState {
-    /// Branch being rebased
+    /// The branch currently being rebased.
     pub branch: String,
-    /// Target branch (rebasing onto)
+    /// The target branch we're rebasing onto.
     pub onto: String,
-    /// Original commit before rebase
+    /// The commit SHA before the rebase started (for recovery).
     pub original_commit: String,
-    /// Remaining branches to restack after this
+    /// Branches still waiting to be restacked after this one completes.
     pub remaining: Vec<String>,
 }
 
-/// An ongoing operation that can be continued or aborted
+/// An ongoing operation that can be continued or aborted.
+///
+/// When a multi-step operation is interrupted (e.g., by conflicts or errors),
+/// its state is saved here. The user can then run `gt continue` to resume
+/// or `gt abort` to cancel.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum OngoingOperation {
-    /// Restacking branches
+    /// Restacking branches to update their parent relationships.
+    /// Tracks which branches still need processing and which are done.
     Restack {
+        /// Branches that still need to be restacked.
         branches: Vec<String>,
+        /// Branches that have been successfully restacked.
         completed: Vec<String>,
     },
-    /// Syncing with remote
+    /// Syncing with the remote repository.
+    /// Tracks branches that should be deleted after sync completes.
     Sync {
+        /// Local branches to delete (their MRs were merged).
         branches_to_delete: Vec<String>,
     },
-    /// Submitting PRs
+    /// Submitting branches as merge/pull requests.
+    /// Tracks submission progress for multi-branch submits.
     Submit {
+        /// Branches that still need to be submitted.
         branches: Vec<String>,
+        /// Branches that have been successfully submitted.
         completed: Vec<String>,
     },
 }
@@ -90,7 +139,15 @@ impl OngoingOperation {
     }
 }
 
-/// Storage interface for Stack metadata
+/// Storage interface for Stack metadata.
+///
+/// Provides methods to load and save Stack's persistent state, including
+/// configuration, branch metadata, and operation state.
+///
+/// # Thread Safety
+///
+/// This struct is not thread-safe. File operations are not locked.
+/// For concurrent access, use external synchronization.
 pub struct Storage {
     /// Path to .git/stack directory
     stack_dir: PathBuf,
@@ -139,6 +196,9 @@ impl Storage {
     }
 
     /// Load configuration
+    ///
+    /// If the config is an older version, it will be automatically migrated
+    /// to the current version and saved back to disk.
     pub fn load_config(&self) -> Result<StackConfig> {
         let path = self.config_path();
         if !path.exists() {
@@ -146,7 +206,15 @@ impl Storage {
         }
 
         let content = fs::read_to_string(&path)?;
-        let config: StackConfig = serde_json::from_str(&content)?;
+        let mut config: StackConfig = serde_json::from_str(&content)?;
+
+        // Check if migration is needed (v1 -> v2)
+        if config.version < crate::config::CONFIG_VERSION {
+            config.migrate();
+            // Save the migrated config back to disk
+            self.save_config(&config)?;
+        }
+
         Ok(config)
     }
 
@@ -405,5 +473,42 @@ mod tests {
         // Complete operation
         storage.complete_operation().unwrap();
         assert!(storage.current_operation().unwrap().is_none());
+    }
+
+    #[test]
+    fn test_config_auto_migration() {
+        let (_dir, storage) = setup();
+
+        // Write a v1 config directly (simulating old format)
+        let v1_config = r#"{
+            "version": 1,
+            "trunk": "main",
+            "remote": "origin",
+            "github": {
+                "owner": "testowner",
+                "repo": "testrepo"
+            }
+        }"#;
+
+        fs::write(storage.config_path(), v1_config).unwrap();
+
+        // Load config - should trigger automatic migration
+        let loaded = storage.load_config().unwrap();
+
+        // Verify migration happened
+        assert_eq!(loaded.version, crate::config::CONFIG_VERSION);
+        assert!(loaded.provider.is_some());
+        assert!(loaded.github.is_none()); // Should be consumed
+
+        let provider = loaded.provider.unwrap();
+        assert_eq!(provider.owner, Some("testowner".to_string()));
+        assert_eq!(provider.repo, Some("testrepo".to_string()));
+        assert_eq!(provider.provider_type, crate::config::ProviderType::GitHub);
+
+        // Verify migration was saved to disk
+        let content = fs::read_to_string(storage.config_path()).unwrap();
+        let saved: StackConfig = serde_json::from_str(&content).unwrap();
+        assert_eq!(saved.version, crate::config::CONFIG_VERSION);
+        assert!(saved.provider.is_some());
     }
 }

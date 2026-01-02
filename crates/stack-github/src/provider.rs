@@ -974,6 +974,7 @@ impl Provider for GitHubProvider {
             squash_merge: true,
             rebase_merge: true,
             fast_forward_merge: false, // GitHub doesn't support this
+            branch_protection: true,
         }
     }
 
@@ -991,6 +992,67 @@ impl Provider for GitHubProvider {
 
     fn milestones(&self) -> Option<&dyn MilestoneProvider> {
         Some(self)
+    }
+
+    fn branch_protection(&self) -> Option<&dyn BranchProtectionProvider> {
+        Some(self)
+    }
+}
+
+// Branch protection implementation
+#[async_trait]
+impl BranchProtectionProvider for GitHubProvider {
+    async fn get_branch_protection(
+        &self,
+        repo: &RepoId,
+        branch: &str,
+    ) -> ProviderResult<Option<BranchProtection>> {
+        let url = format!(
+            "{}/repos/{}/{}/branches/{}/protection",
+            self.base_url,
+            repo.owner,
+            repo.name,
+            branch
+        );
+
+        // GitHub returns 404 if branch is not protected
+        match self.get::<serde_json::Value>(&url).await {
+            Ok(json) => {
+                let protection = BranchProtection {
+                    pattern: branch.to_string(),
+                    is_protected: true,
+                    require_pull_request: json
+                        .get("required_pull_request_reviews")
+                        .is_some(),
+                    required_approvals: json
+                        .get("required_pull_request_reviews")
+                        .and_then(|r| r.get("required_approving_review_count"))
+                        .and_then(|c| c.as_u64())
+                        .unwrap_or(0) as u32,
+                    require_status_checks: json
+                        .get("required_status_checks")
+                        .is_some(),
+                    require_linear_history: json
+                        .get("required_linear_history")
+                        .and_then(|r| r.get("enabled"))
+                        .and_then(|e| e.as_bool())
+                        .unwrap_or(false),
+                    allow_force_push: json
+                        .get("allow_force_pushes")
+                        .and_then(|r| r.get("enabled"))
+                        .and_then(|e| e.as_bool())
+                        .unwrap_or(false),
+                    allow_deletions: json
+                        .get("allow_deletions")
+                        .and_then(|r| r.get("enabled"))
+                        .and_then(|e| e.as_bool())
+                        .unwrap_or(false),
+                };
+                Ok(Some(protection))
+            }
+            Err(ProviderError::NotFound(_)) => Ok(None),
+            Err(e) => Err(e),
+        }
     }
 }
 

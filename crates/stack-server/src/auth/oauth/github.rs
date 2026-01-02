@@ -44,6 +44,7 @@ impl GitHubOAuth {
         }
 
         #[derive(Deserialize)]
+        #[allow(dead_code)] // Fields required for deserialization
         struct TokenResponse {
             access_token: String,
             token_type: String,

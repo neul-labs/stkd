@@ -3,6 +3,7 @@
 use anyhow::{Context, Result};
 use clap::Args;
 use stack_core::{rebase, Repository};
+use std::time::Duration;
 
 use crate::output;
 use crate::provider_context::ProviderContext;
@@ -24,26 +25,102 @@ pub struct SyncArgs {
     /// Force restack even if not needed
     #[arg(long)]
     force: bool,
+
+    /// Show what would be done without actually doing it
+    #[arg(long)]
+    dry_run: bool,
+
+    /// Watch for changes and auto-sync (interval in seconds, default: 60)
+    #[arg(long, value_name = "SECONDS")]
+    watch: Option<Option<u64>>,
 }
 
 pub async fn execute(args: SyncArgs) -> Result<()> {
+    // Watch mode - run sync periodically
+    if let Some(interval) = args.watch {
+        let interval_secs = interval.unwrap_or(60);
+        output::info(&format!(
+            "Watch mode enabled - syncing every {} seconds",
+            interval_secs
+        ));
+        output::hint("Press Ctrl+C to stop");
+        output::info("");
+
+        loop {
+            if let Err(e) = sync_once(&args).await {
+                output::error(&format!("Sync failed: {}", e));
+            }
+
+            output::info("");
+            output::info(&format!(
+                "Next sync in {} seconds...",
+                interval_secs
+            ));
+            tokio::time::sleep(Duration::from_secs(interval_secs)).await;
+            output::info("");
+        }
+    }
+
+    sync_once(&args).await
+}
+
+async fn sync_once(args: &SyncArgs) -> Result<()> {
     let repo = Repository::open(".")?;
     let trunk = repo.trunk().to_string();
+
+    // Dry run mode - show what would be done
+    if args.dry_run {
+        output::info("Dry run - showing what would be done:");
+        output::info("");
+
+        if !args.no_pull {
+            output::info(&format!("  {} Fetch from remote and update {}", output::ARROW, trunk));
+        } else {
+            output::info(&format!("  {} Fetch from remote", output::ARROW));
+        }
+
+        output::info(&format!("  {} Check MR status for tracked branches", output::ARROW));
+
+        if !args.no_delete {
+            output::info(&format!("  {} Delete branches with merged MRs", output::ARROW));
+        }
+
+        if !args.no_restack {
+            let graph = repo.load_graph()?;
+            let needs_restack = graph.needs_restack(repo.git())?;
+            if !needs_restack.is_empty() || args.force {
+                output::info(&format!("  {} Restack branches that need updating:", output::ARROW));
+                for branch in &needs_restack {
+                    output::info(&format!("      - {}", branch));
+                }
+                if needs_restack.is_empty() && args.force {
+                    output::info("      (force flag set, will restack all)");
+                }
+            } else {
+                output::info(&format!("  {} No branches need restacking", output::ARROW));
+            }
+        }
+
+        output::info("");
+        output::hint("Run without --dry-run to execute");
+        return Ok(());
+    }
 
     // Save current branch to return to it later
     let current_branch = repo.current_branch()?;
 
     // Step 1: Fetch from remote
-    output::info("Fetching from remote...");
-    let status = std::process::Command::new("git")
+    let spinner = output::spinner("Fetching from remote...");
+    let result = std::process::Command::new("git")
         .args(["fetch", "origin", "--prune"])
-        .status()
+        .output()
         .context("Failed to run git fetch")?;
 
-    if !status.success() {
+    if !result.status.success() {
+        output::finish_progress_error(&spinner, "Failed to fetch from remote");
         anyhow::bail!("Failed to fetch from remote");
     }
-    output::success("Fetched from remote");
+    output::finish_progress(&spinner, "Fetched from remote");
 
     // Step 2: Update trunk
     if !args.no_pull {
@@ -75,24 +152,26 @@ pub async fn execute(args: SyncArgs) -> Result<()> {
     }
 
     // Step 3: Update MR status from provider
-    output::info("Checking MR status...");
+    let mr_spinner = output::spinner("Checking MR status...");
 
     let mut merged_branches = Vec::new();
     let mut closed_branches = Vec::new();
+    let mut provider_connected = false;
 
     // Try to get MR status from provider
     match ProviderContext::from_repo(&repo).await {
         Ok(ctx) => {
+            provider_connected = true;
             let branches = repo.storage().list_branches()?;
 
             for branch_info in branches {
                 if let Some(mr_number) = branch_info.merge_request_id {
+                    mr_spinner.set_message(format!("Checking MR #{}...", mr_number));
                     match ctx.provider().get_mr(&ctx.repo_id, mr_number.into()).await {
                         Ok(mr) => {
                             match mr.state {
                                 stack_provider_api::MergeRequestState::Merged => {
                                     merged_branches.push(branch_info.name.clone());
-                                    output::info(&format!("  {} MR #{} was merged", output::ARROW, mr_number));
                                 }
                                 stack_provider_api::MergeRequestState::Closed => {
                                     // Check if it was merged by looking if the branch was deleted
@@ -100,10 +179,8 @@ pub async fn execute(args: SyncArgs) -> Result<()> {
                                     if repo.git().find_reference(&remote_ref).is_err() {
                                         // Remote branch doesn't exist, MR was likely merged
                                         merged_branches.push(branch_info.name.clone());
-                                        output::info(&format!("  {} MR #{} was merged", output::ARROW, mr_number));
                                     } else {
                                         closed_branches.push(branch_info.name.clone());
-                                        output::info(&format!("  {} MR #{} was closed", output::ARROW, mr_number));
                                     }
                                 }
                                 _ => {
@@ -111,16 +188,32 @@ pub async fn execute(args: SyncArgs) -> Result<()> {
                                 }
                             }
                         }
-                        Err(e) => {
-                            output::warn(&format!("Could not fetch MR #{} status: {}", mr_number, e));
+                        Err(_) => {
+                            // Silently skip MRs we can't fetch
                         }
                     }
                 }
             }
         }
         Err(e) => {
-            output::warn(&format!("Could not connect to provider: {}", e));
-            output::hint("Continuing without MR status update");
+            output::finish_progress_error(&mr_spinner, "Could not connect to provider");
+            output::hint(&format!("Error: {}. Continuing without MR status update", e));
+        }
+    }
+
+    // Finish the spinner if we connected successfully
+    if provider_connected {
+        if !merged_branches.is_empty() || !closed_branches.is_empty() {
+            output::finish_progress(
+                &mr_spinner,
+                &format!(
+                    "Found {} merged, {} closed MR(s)",
+                    merged_branches.len(),
+                    closed_branches.len()
+                ),
+            );
+        } else {
+            output::finish_progress(&mr_spinner, "All MRs up to date");
         }
     }
 
