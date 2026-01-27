@@ -16,7 +16,7 @@ The web dashboard provides:
 
 ```bash
 # Start the backend server
-cargo run --bin stack-server
+cargo run --bin stkd-server
 
 # In another terminal, start the frontend dev server
 cd web

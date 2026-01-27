@@ -4,9 +4,9 @@ This guide explains how to add support for a new Git hosting provider to Stack.
 
 ## Overview
 
-Stack uses a trait-based provider system defined in the `stack-provider-api` crate. To add a new provider:
+Stack uses a trait-based provider system defined in the `stkd-provider-api` crate. To add a new provider:
 
-1. Create a new crate (e.g., `stack-gitea`)
+1. Create a new crate (e.g., `stkd-gitea`)
 2. Implement the required traits
 3. Register the provider in the CLI
 
@@ -213,7 +213,7 @@ async fn test_create_mr() {
 Add your provider to the CLI:
 
 ```rust
-// In stack-cli/src/provider_context.rs
+// In stkd-cli/src/provider_context.rs
 fn create_provider(config: &ProviderConfig) -> Box<dyn Provider> {
     match config.provider_type {
         ProviderType::GitHub => Box::new(GitHubProvider::new(...)),

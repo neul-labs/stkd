@@ -9,17 +9,17 @@ Stack is composed of several Rust crates:
 ```
 stack/
 ├── crates/
-│   ├── stack-core/       # Core logic, no network
-│   ├── stack-provider-api/  # Provider trait definitions
-│   ├── stack-github/     # GitHub implementation
-│   ├── stack-gitlab/     # GitLab implementation
-│   └── stack-cli/        # Command-line interface
+│   ├── stkd-core/       # Core logic, no network
+│   ├── stkd-provider-api/  # Provider trait definitions
+│   ├── stkd-github/     # GitHub implementation
+│   ├── stkd-gitlab/     # GitLab implementation
+│   └── stkd-cli/        # Command-line interface
 └── docs/                 # This documentation
 ```
 
 ## Crate Responsibilities
 
-### stack-core
+### stkd-core
 
 The foundation crate containing:
 
@@ -31,7 +31,7 @@ The foundation crate containing:
 
 **Key principle**: This crate has no network dependencies.
 
-### stack-provider-api
+### stkd-provider-api
 
 Defines the interface that all providers must implement:
 
@@ -40,7 +40,7 @@ Defines the interface that all providers must implement:
 - Error types (`ProviderError`)
 - Authentication abstractions
 
-### stack-github
+### stkd-github
 
 GitHub-specific implementation:
 
@@ -49,7 +49,7 @@ GitHub-specific implementation:
 - OAuth device flow
 - GitHub-specific response parsing
 
-### stack-gitlab
+### stkd-gitlab
 
 GitLab-specific implementation:
 
@@ -58,7 +58,7 @@ GitLab-specific implementation:
 - PAT authentication
 - GitLab-specific response parsing
 
-### stack-cli
+### stkd-cli
 
 The user-facing command-line interface:
 

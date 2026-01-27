@@ -1,8 +1,8 @@
 site_name: Stack Documentation
 site_description: Stacked Diffs for Git - A Graphite-compatible CLI tool
-site_url: https://stack.dev
-repo_url: https://github.com/dipankar/stack
-repo_name: dipankar/stack
+site_url: https://docs.neullabs.com/stack
+repo_url: https://github.com/neul-labs/stack
+repo_name: neul-labs/stack
 
 theme:
   name: material
@@ -56,10 +56,10 @@ markdown_extensions:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/dipankar/stack
+      link: https://github.com/neul-labs/stack
   generator: false
 
-copyright: Copyright &copy; 2024-2026 Stack Contributors
+copyright: Copyright &copy; 2024-2026 Neul Labs
 
 nav:
   - Home: index.md

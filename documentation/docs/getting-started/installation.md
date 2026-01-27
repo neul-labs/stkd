@@ -12,7 +12,7 @@ Stack can be installed via Cargo or built from source.
 The easiest way to install Stack:
 
 ```bash
-cargo install stack-cli
+cargo install stkd-cli
 ```
 
 This installs the `gt` command globally.
@@ -23,11 +23,11 @@ For the latest development version:
 
 ```bash
 # Clone the repository
-git clone https://github.com/dipankar/stack
+git clone https://github.com/neul-labs/stack
 cd stack
 
 # Build and install
-cargo install --path crates/stack-cli
+cargo install --path crates/stkd-cli
 ```
 
 ## Verify Installation
@@ -74,7 +74,7 @@ Stack supports shell completions for bash, zsh, and fish.
 To update to the latest version:
 
 ```bash
-cargo install stack-cli --force
+cargo install stkd-cli --force
 ```
 
 ## Uninstalling
@@ -82,7 +82,7 @@ cargo install stack-cli --force
 To remove Stack:
 
 ```bash
-cargo uninstall stack-cli
+cargo uninstall stkd-cli
 ```
 
 ## Next Steps

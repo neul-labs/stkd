@@ -1,0 +1,28 @@
+[package]
+name = "stkd-provider-api"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Provider API traits and types for Stkd - enables pluggable Git hosting provider support"
+
+[dependencies]
+# Async
+async-trait = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+
+# Time
+chrono = { workspace = true }
+
+# Utilities
+dirs = { workspace = true }
+url = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
+tempfile = { workspace = true }

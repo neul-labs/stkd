@@ -14,9 +14,9 @@ This guide walks you through setting up the Stack web dashboard.
 
 ```bash
 # From the repository root
-cargo build --release --bin stack-server
+cargo build --release --bin stkd-server
 
-# The binary is at target/release/stack-server
+# The binary is at target/release/stkd-server
 ```
 
 ### 2. Configure Environment
@@ -75,10 +75,10 @@ GITLAB_URL=https://gitlab.com  # or self-hosted URL
 
 ```bash
 # Run with SQLite
-./target/release/stack-server
+./target/release/stkd-server
 
 # Or run in development
-cargo run --bin stack-server
+cargo run --bin stkd-server
 
 # Server starts at http://localhost:3000
 ```
@@ -140,7 +140,7 @@ export DATABASE_URL=postgres://user:password@localhost/stack
 export STACK_DB_BACKEND=postgres
 
 # Run migrations (automatic on server start)
-./target/release/stack-server
+./target/release/stkd-server
 ```
 
 ## Verify Installation

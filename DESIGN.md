@@ -52,7 +52,7 @@ gt submit --stack   # Create PRs for current branch and all descendants
 stack/
 ├── Cargo.toml              # Workspace manifest
 ├── crates/
-│   ├── stack-core/         # Core logic (no CLI, no network)
+│   ├── stkd-core/         # Core logic (no CLI, no network)
 │   │   ├── src/
 │   │   │   ├── lib.rs
 │   │   │   ├── branch.rs      # Branch operations
@@ -63,7 +63,7 @@ stack/
 │   │   │   └── config.rs      # Configuration
 │   │   └── Cargo.toml
 │   │
-│   ├── stack-github/       # GitHub API integration
+│   ├── stkd-github/       # GitHub API integration
 │   │   ├── src/
 │   │   │   ├── lib.rs
 │   │   │   ├── api.rs         # GraphQL/REST client
@@ -72,7 +72,7 @@ stack/
 │   │   │   └── sync.rs        # Remote sync
 │   │   └── Cargo.toml
 │   │
-│   └── stack-cli/          # CLI binary
+│   └── stkd-cli/          # CLI binary
 │       ├── src/
 │       │   ├── main.rs
 │       │   ├── commands/

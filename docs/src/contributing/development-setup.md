@@ -41,7 +41,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/stack
+git clone https://github.com/neul-labs/stack
 cd stack
 
 # Build in debug mode
@@ -133,10 +133,10 @@ Install the Rust plugin. It provides:
 stack/
 ├── Cargo.toml           # Workspace definition
 ├── crates/
-│   ├── stack-core/      # Core logic
-│   ├── stack-provider-api/  # Provider traits
-│   ├── stack-github/    # GitHub provider
-│   └── stack-cli/       # CLI application
+│   ├── stkd-core/      # Core logic
+│   ├── stkd-provider-api/  # Provider traits
+│   ├── stkd-github/    # GitHub provider
+│   └── stkd-cli/       # CLI application
 ├── docs/                # mdBook documentation
 └── tests/               # Integration tests
 ```
@@ -168,7 +168,7 @@ VS Code launch configuration (`.vscode/launch.json`):
             "request": "launch",
             "name": "Debug gt",
             "cargo": {
-                "args": ["build", "--bin=gt", "--package=stack-cli"]
+                "args": ["build", "--bin=gt", "--package=stkd-cli"]
             },
             "args": ["status"],
             "cwd": "${workspaceFolder}/test-repo"
@@ -189,7 +189,7 @@ cargo test
 cargo test test_branch_creation
 
 # Run tests for a specific crate
-cargo test -p stack-core
+cargo test -p stkd-core
 ```
 
 ### Integration Tests

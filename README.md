@@ -1,207 +1,116 @@
-# Stack - Stacked Diffs for Git
+[![CI](https://github.com/neul-labs/stack/actions/workflows/ci.yml/badge.svg)](https://github.com/neul-labs/stack/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Docs](https://img.shields.io/badge/docs-neullabs.com-green.svg)](https://docs.neullabs.com/stack)
 
-A Graphite-compatible CLI for managing stacked pull requests on GitHub and GitLab.
+# Stack
 
-## Overview
+**Stacked diffs. Simplified.**
 
-Stack is an open-source alternative to [Graphite](https://graphite.dev) that brings the stacked diffs workflow to any Git repository. It helps you:
+Stack is an open-source CLI for managing stacked pull requests on GitHub and GitLab. Break large changes into small, reviewable PRs that stay in sync automatically.
 
-- **Break large changes into reviewable PRs** - Each logical change gets its own branch and PR
-- **Keep dependent changes in sync** - When you update a base branch, Stack automatically rebases all dependent branches
-- **Submit entire stacks at once** - Create/update PRs for your entire stack with one command
-- **Works with GitHub and GitLab** - Full support for both platforms with a unified interface
+## Why Stacked Diffs?
+
+Large PRs are hard to review. Stacked diffs let you split work into a chain of dependent branches, each with its own focused PR:
+
+```
+main
+ └── feature/auth-base      PR #1: Core authentication
+      └── feature/auth-oauth    PR #2: OAuth support (depends on #1)
+           └── feature/auth-2fa     PR #3: 2FA (depends on #2)
+```
+
+When you update a branch, Stack automatically rebases all dependent branches. When PRs merge, the stack collapses cleanly.
 
 ## Installation
 
 ```bash
-# Build from source
-cargo install --path crates/stack-cli
+# Quick install (downloads binary or builds from source)
+curl -fsSL https://raw.githubusercontent.com/neul-labs/stack/main/install.sh | bash
 
-# The binary is named 'gt' for Graphite compatibility
-gt --help
-
-# Enable shell completions (bash, zsh, fish, powershell)
-gt completions bash >> ~/.bashrc
-gt completions zsh >> ~/.zshrc
-gt completions fish > ~/.config/fish/completions/gt.fish
+# Or build from source
+cargo install --path crates/stkd-cli
 ```
+
+The binary is named `gt` for Graphite compatibility.
 
 ## Quick Start
 
 ```bash
-# Initialize Stack in your repository
-cd your-repo
+# Initialize in your repository
 gt init
 
-# Authenticate with your provider
-gt auth login              # Interactive OAuth (GitHub/GitLab)
-gt auth --token <token>    # Or use a personal access token
+# Authenticate with GitHub or GitLab
+gt auth login
 
-# Create a stack of changes
-gt create feature/auth-base    # Create first branch
+# Create a stack of branches
+gt create feature/step-1    # First branch on main
 # ... make changes, commit ...
 
-gt create feature/auth-oauth   # Stack another branch on top
+gt create feature/step-2    # Stacks on step-1
 # ... make changes, commit ...
 
-gt create feature/auth-tests   # And another
+gt create feature/step-3    # Stacks on step-2
 # ... make changes, commit ...
 
-# View your stack
+# See your stack
 gt log
-# ○ feature/auth-base
-#   ○ feature/auth-oauth
-#     ◉ feature/auth-tests  (you are here)
+# ○ feature/step-1
+#   ○ feature/step-2
+#     ◉ feature/step-3  ← you are here
 
-# Submit all PRs with reviewers and labels
-gt submit --stack --reviewers alice,bob --labels feature,auth
-
-# Navigate the stack
-gt down          # Go to parent branch
-gt up            # Go to child branch
-gt top           # Go to stack tip
-gt bottom        # Go to stack root
-
-# Update a branch and restack
-gt checkout feature/auth-base
-# ... make changes ...
-gt modify        # Amend the commit
-gt restack       # Rebase all dependent branches
+# Submit all as PRs
+gt submit --stack
 ```
 
-## Commands
+## Core Workflow
 
-### Branch Management
-- `gt create <name>` - Create a new branch on top of current
-- `gt rename <name>` - Rename the current branch
-- `gt delete <name>` - Delete a branch
-- `gt track [branch]` - Start tracking an existing branch
-- `gt untrack [branch]` - Stop tracking a branch
+| Command | Description |
+|---------|-------------|
+| `gt create <name>` | Create a branch stacked on current |
+| `gt log` | Visualize the stack |
+| `gt up` / `gt down` | Navigate between branches |
+| `gt restack` | Rebase all dependent branches |
+| `gt submit --stack` | Create/update PRs for the stack |
+| `gt sync` | Fetch, restack, clean merged branches |
+| `gt land --stack` | Merge the stack in order |
 
-### Navigation
-- `gt up [n]` - Move up n branches (toward tip)
-- `gt down [n]` - Move down n branches (toward root)
-- `gt top` - Jump to stack tip
-- `gt bottom` - Jump to stack root
-- `gt checkout [branch]` - Switch branches (with fuzzy search)
+## Key Features
 
-### Stack Operations
-- `gt log` - Show the current stack
-- `gt ls` - Short stack view
-- `gt ll` - Long stack view with details
-- `gt info` - Show current branch info
-- `gt status` - Show stack status
+- **Auto-restack**: Edit any branch, all dependents rebase automatically
+- **GitHub + GitLab**: Full support for both platforms
+- **PR automation**: Reviewers, labels, templates, draft PRs
+- **Stack-aware submit**: One command creates PRs for your entire stack
+- **Conflict handling**: `gt continue` / `gt abort` for rebase conflicts
+- **Undo/redo**: Recover from mistakes with `gt undo`
 
-### Editing
-- `gt modify [-m msg]` - Amend the current branch
-- `gt squash [--all] [-n count]` - Squash commits in current branch
-- `gt fold [--into commit]` - Fold staged changes into a previous commit
-- `gt split [-c count]` - Split the current commit into multiple commits
+## Try the Demo
 
-### Synchronization
-- `gt sync` - Sync with remote and restack
-- `gt restack` - Rebase stack onto updated parents
-- `gt submit [--stack]` - Create/update PRs
-- `gt land [--stack]` - Merge the stack
-
-### Conflict Resolution
-- `gt continue` - Continue after resolving conflicts
-- `gt abort` - Abort the current operation
-
-### Configuration
-- `gt auth login` - Authenticate with GitHub/GitLab via OAuth
-- `gt auth --token <token>` - Authenticate with a personal access token
-- `gt config [key] [value]` - View/edit configuration
-- `gt completions <shell>` - Generate shell completions
-
-## Advanced Features
-
-### PR Automation
-
-Submit PRs with reviewers, labels, and templates:
+See Stack in action with an interactive demo:
 
 ```bash
-# Request reviewers and add labels
-gt submit --reviewers alice,bob --labels bug,urgent
-
-# Use PR template from .github/PULL_REQUEST_TEMPLATE.md
-gt submit --template
-
-# Preview what would be done
-gt submit --dry-run
-
-# Submit specific branches only
-gt submit --only feature/step-1,feature/step-2
-gt submit --from feature/step-2  # From branch to tip
-gt submit --to feature/step-3    # From root to branch
+./demo.sh
 ```
 
-### Commit Operations
+## Documentation
 
-```bash
-# Squash all commits in branch
-gt squash --all
+Full documentation at **[docs.neullabs.com/stack](https://docs.neullabs.com/stack)**:
 
-# Squash last 3 commits with custom message
-gt squash -n 3 -m "Combined changes"
+- [Getting Started](https://docs.neullabs.com/stack/getting-started)
+- [Command Reference](https://docs.neullabs.com/stack/commands)
+- [Tutorials](https://docs.neullabs.com/stack/tutorials)
 
-# Fold staged changes into HEAD
-git add file.rs
-gt fold
-
-# Fold into a specific commit (creates fixup)
-gt fold --into HEAD~2 --fixup
-
-# Split current commit into 3 commits
-gt split -c 3
-```
-
-### Dry-Run Mode
-
-Preview operations before executing:
-
-```bash
-gt submit --dry-run
-gt land --dry-run
-```
-
-## How It Works
-
-Stack tracks branch relationships in `.git/stack/`:
+## Architecture
 
 ```
-.git/stack/
-├── config.json      # Stack configuration
-├── state.json       # Current operation state
-└── branches/        # Per-branch metadata
-    ├── feature__auth-base.json
-    ├── feature__auth-oauth.json
-    └── feature__auth-tests.json
+crates/
+├── stkd-cli          # CLI binary (gt)
+├── stkd-core         # Core library (Repository, Stack, DAG)
+├── stkd-provider-api # Provider trait definitions
+├── stkd-github       # GitHub implementation
+├── stkd-gitlab       # GitLab implementation
+├── stkd-db           # Database layer (SQLite/PostgreSQL)
+└── stkd-server       # Web dashboard API
 ```
-
-Each branch knows its:
-- **Parent** - The branch it was created from
-- **Children** - Branches created on top of it
-- **PR** - Associated pull request (if submitted)
-
-When you modify a branch, Stack automatically rebases all dependent branches to keep your stack consistent.
-
-## Web Dashboard
-
-Stack includes an optional web dashboard for visualizing and managing your stacks across repositories.
-
-```bash
-# Start the dashboard server
-cargo run --bin stack-server
-
-# Access at http://localhost:3000
-```
-
-Features:
-- OAuth login with GitHub/GitLab
-- Real-time stack visualization
-- Organization-based multi-tenancy
-- PR status and CI integration
 
 ## Comparison with Graphite
 
@@ -209,55 +118,25 @@ Features:
 |---------|----------|-------|
 | Open source | No | Yes |
 | Self-hosted | No | Yes |
-| CLI commands | `gt` | `gt` (compatible) |
-| GitHub support | Yes | Yes |
-| GitLab support | No | Yes |
-| Web dashboard | Yes | Yes |
-| PR automation | Yes | Yes |
-| Shell completions | Yes | Yes |
-| AI PR descriptions | Yes (paid) | Planned |
+| GitHub | Yes | Yes |
+| GitLab | No | Yes |
+| CLI compatible | `gt` | `gt` |
 
-## Project Structure
-
-```
-crates/
-├── stack-cli          # CLI application (gt binary)
-├── stack-core         # Core library (Repository, Stack, DAG)
-├── stack-provider-api # Provider trait definitions
-├── stack-github       # GitHub implementation
-├── stack-gitlab       # GitLab implementation
-├── stack-db           # Database abstraction (SQLite/PostgreSQL)
-└── stack-server       # Web dashboard API server
-
-web/                   # Vue 3 + TailwindCSS frontend
-```
-
-## Development
+## Contributing
 
 ```bash
-# Clone the repository
-git clone https://github.com/dipankar/stack
+git clone https://github.com/neul-labs/stack
 cd stack
-
-# Build all crates
 cargo build
-
-# Run tests
 cargo test
-
-# Run the CLI
-cargo run --bin gt -- --help
-
-# Run the web dashboard
-cargo run --bin stack-server &
-cd web && npm install && npm run dev
 ```
+
+See [CONTRIBUTING.md](docs/src/contributing/guidelines.md) for guidelines.
 
 ## License
 
-Apache-2.0
+Apache-2.0 - See [LICENSE](LICENSE) for details.
 
-## Acknowledgments
+---
 
-- [Graphite](https://graphite.dev) for pioneering the stacked diffs workflow
-- [git-branchless](https://github.com/arxanas/git-branchless) for inspiration on Git internals
+Built by [Neul Labs](https://neullabs.com)

@@ -40,27 +40,27 @@ Install Visual Studio Build Tools with the "C++ build tools" workload.
 ### From crates.io (Recommended)
 
 ```bash
-cargo install stack-cli
+cargo install stkd-cli
 ```
 
 ### From Git Repository
 
 ```bash
 # Latest release
-cargo install --git https://github.com/yourusername/stack stack-cli
+cargo install --git https://github.com/neul-labs/stack stkd-cli
 
 # Specific version
-cargo install --git https://github.com/yourusername/stack --tag v0.1.0 stack-cli
+cargo install --git https://github.com/neul-labs/stack --tag v0.1.0 stkd-cli
 
 # Development version
-cargo install --git https://github.com/yourusername/stack --branch main stack-cli
+cargo install --git https://github.com/neul-labs/stack --branch main stkd-cli
 ```
 
 ### Local Development
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/stack
+git clone https://github.com/neul-labs/stack
 cd stack
 
 # Build in debug mode
@@ -73,7 +73,7 @@ cargo run -- --help
 cargo build --release
 
 # Install locally
-cargo install --path crates/stack-cli
+cargo install --path crates/stkd-cli
 ```
 
 ## Feature Flags
@@ -82,13 +82,13 @@ Stack supports optional feature flags:
 
 ```bash
 # Install with all providers
-cargo install stack-cli --features all-providers
+cargo install stkd-cli --features all-providers
 
 # Install with only GitHub support (default)
-cargo install stack-cli --features github
+cargo install stkd-cli --features github
 
 # Install with GitLab support
-cargo install stack-cli --features gitlab
+cargo install stkd-cli --features gitlab
 ```
 
 ## Updating
@@ -96,7 +96,7 @@ cargo install stack-cli --features gitlab
 To update to the latest version:
 
 ```bash
-cargo install stack-cli --force
+cargo install stkd-cli --force
 ```
 
 ## Troubleshooting
@@ -119,7 +119,7 @@ Stack uses libgit2 via the `git2` crate. If you encounter issues:
 
 ```bash
 # Use bundled libgit2
-LIBGIT2_SYS_USE_PKG_CONFIG=0 cargo install stack-cli
+LIBGIT2_SYS_USE_PKG_CONFIG=0 cargo install stkd-cli
 ```
 
 ### Build Failures

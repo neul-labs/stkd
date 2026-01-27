@@ -17,9 +17,9 @@ Next milestone: v1.0.0 stable release.
 
 **Goal**: Establish pluggable provider architecture
 
-- [x] Create `stack-provider-api` crate with traits
+- [x] Create `stkd-provider-api` crate with traits
 - [x] Implement provider-agnostic types (MergeRequest, Pipeline, etc.)
-- [x] Refactor `stack-github` to implement provider traits
+- [x] Refactor `stkd-github` to implement provider traits
 - [x] Add enhanced GitHub features (reviews, labels, pipelines)
 - [x] Update CLI to use provider abstraction
 - [x] Configuration migration (v1 → v2)
@@ -28,7 +28,7 @@ Next milestone: v1.0.0 stable release.
 
 **Goal**: Full GitLab support with feature parity
 
-- [x] Create `stack-gitlab` crate
+- [x] Create `stkd-gitlab` crate
 - [x] Implement core MR operations
 - [x] Add pipeline status integration
 - [x] Add approval/review support
@@ -117,7 +117,7 @@ We welcome contributions! See [CONTRIBUTING.md](./docs/src/contributing/README.m
 
 ### How to Get Involved
 
-1. Check [open issues](https://github.com/yourusername/stack/issues)
+1. Check [open issues](https://github.com/neul-labs/stack/issues)
 2. Join discussions on feature design
 3. Submit pull requests
 4. Report bugs and suggest features
@@ -138,8 +138,8 @@ After v1.0.0:
 
 Your feedback shapes our roadmap! Let us know what features matter most:
 
-- [GitHub Discussions](https://github.com/yourusername/stack/discussions)
-- [GitHub Issues](https://github.com/yourusername/stack/issues)
+- [GitHub Discussions](https://github.com/neul-labs/stack/discussions)
+- [GitHub Issues](https://github.com/neul-labs/stack/issues)
 
 ---
 

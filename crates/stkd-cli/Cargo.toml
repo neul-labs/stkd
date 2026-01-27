@@ -1,0 +1,49 @@
+[package]
+name = "stkd-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "CLI for Stkd - stacked diffs for Git"
+
+[[bin]]
+name = "gt"
+path = "src/main.rs"
+
+[dependencies]
+stkd-core = { path = "../stkd-core" }
+stkd-provider-api = { path = "../stkd-provider-api" }
+stkd-github = { path = "../stkd-github" }
+stkd-gitlab = { path = "../stkd-gitlab" }
+
+# Git
+git2 = { workspace = true }
+
+# URL parsing
+url = { workspace = true }
+
+# Async
+tokio = { workspace = true }
+
+# CLI
+clap = { workspace = true }
+clap_complete = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Terminal
+colored = { workspace = true }
+dialoguer = { workspace = true }
+indicatif = { workspace = true }
+console = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

@@ -2364,7 +2364,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596"
 
 [[package]]
-name = "stack-cli"
+name = "stkd-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -2377,10 +2377,10 @@ dependencies = [
  "indicatif",
  "serde",
  "serde_json",
- "stack-core",
- "stack-github",
- "stack-gitlab",
- "stack-provider-api",
+ "stkd-core",
+ "stkd-github",
+ "stkd-gitlab",
+ "stkd-provider-api",
  "tempfile",
  "tokio",
  "tracing",
@@ -2389,7 +2389,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "stack-core"
+name = "stkd-core"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -2406,7 +2406,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "stack-db"
+name = "stkd-db"
 version = "0.1.0"
 dependencies = [
  "async-trait",
@@ -2422,7 +2422,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "stack-github"
+name = "stkd-github"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -2434,8 +2434,8 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "stack-core",
- "stack-provider-api",
+ "stkd-core",
+ "stkd-provider-api",
  "tempfile",
  "thiserror 1.0.69",
  "tokio",
@@ -2444,7 +2444,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "stack-gitlab"
+name = "stkd-gitlab"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -2454,8 +2454,8 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "stack-core",
- "stack-provider-api",
+ "stkd-core",
+ "stkd-provider-api",
  "tempfile",
  "thiserror 1.0.69",
  "tokio",
@@ -2465,7 +2465,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "stack-provider-api"
+name = "stkd-provider-api"
 version = "0.1.0"
 dependencies = [
  "async-trait",
@@ -2480,7 +2480,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "stack-server"
+name = "stkd-server"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -2494,10 +2494,10 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "stack-db",
- "stack-github",
- "stack-gitlab",
- "stack-provider-api",
+ "stkd-db",
+ "stkd-github",
+ "stkd-gitlab",
+ "stkd-provider-api",
  "tempfile",
  "thiserror 1.0.69",
  "tokio",

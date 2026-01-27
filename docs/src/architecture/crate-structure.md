@@ -7,23 +7,23 @@ This page details the structure and contents of each crate in the Stack workspac
 ```
 Cargo.toml           # Workspace definition
 crates/
-├── stack-core/      # Core library: Repository, Stack, DAG
-├── stack-provider-api/  # Provider trait definitions
-├── stack-github/    # GitHub implementation
-├── stack-gitlab/    # GitLab implementation
-├── stack-db/        # Database abstraction (SQLite/PostgreSQL)
-├── stack-server/    # Web dashboard API server
-└── stack-cli/       # CLI application (gt binary)
+├── stkd-core/      # Core library: Repository, Stack, DAG
+├── stkd-provider-api/  # Provider trait definitions
+├── stkd-github/    # GitHub implementation
+├── stkd-gitlab/    # GitLab implementation
+├── stkd-db/        # Database abstraction (SQLite/PostgreSQL)
+├── stkd-server/    # Web dashboard API server
+└── stkd-cli/       # CLI application (gt binary)
 
 web/                 # Vue 3 + TailwindCSS frontend
 ```
 
-## stack-core
+## stkd-core
 
 Core library for git operations and stack management.
 
 ```
-stack-core/
+stkd-core/
 ├── Cargo.toml
 └── src/
     ├── lib.rs
@@ -54,12 +54,12 @@ impl Repository {
 }
 ```
 
-## stack-provider-api
+## stkd-provider-api
 
 Provider-agnostic traits and types.
 
 ```
-stack-provider-api/
+stkd-provider-api/
 ├── Cargo.toml
 └── src/
     ├── lib.rs
@@ -88,12 +88,12 @@ pub trait Provider: MergeRequestProvider + UserProvider + RepositoryProvider {
 }
 ```
 
-## stack-github
+## stkd-github
 
 GitHub API implementation.
 
 ```
-stack-github/
+stkd-github/
 ├── Cargo.toml
 └── src/
     ├── lib.rs
@@ -105,12 +105,12 @@ stack-github/
     └── sync.rs          # Remote sync
 ```
 
-## stack-gitlab
+## stkd-gitlab
 
 GitLab API implementation.
 
 ```
-stack-gitlab/
+stkd-gitlab/
 ├── Cargo.toml
 └── src/
     ├── lib.rs
@@ -121,12 +121,12 @@ stack-gitlab/
     └── sync.rs          # Remote sync
 ```
 
-## stack-db
+## stkd-db
 
 Database abstraction layer supporting SQLite and PostgreSQL.
 
 ```
-stack-db/
+stkd-db/
 ├── Cargo.toml
 └── src/
     ├── lib.rs              # Public API
@@ -179,12 +179,12 @@ pub trait DatabasePool: Send + Sync {
 pub async fn create_pool(config: &DatabaseConfig) -> DbResult<Box<dyn DatabasePool>>;
 ```
 
-## stack-server
+## stkd-server
 
 Axum-based web API server for the dashboard.
 
 ```
-stack-server/
+stkd-server/
 ├── Cargo.toml
 └── src/
     ├── lib.rs              # Server setup
@@ -235,12 +235,12 @@ POST   /api/webhooks/github             # GitHub events
 POST   /api/webhooks/gitlab             # GitLab events
 ```
 
-## stack-cli
+## stkd-cli
 
 Command-line interface.
 
 ```
-stack-cli/
+stkd-cli/
 ├── Cargo.toml
 └── src/
     ├── main.rs
@@ -267,44 +267,44 @@ stack-cli/
 
 ```
                     ┌──────────────────┐
-                    │    stack-cli     │
+                    │    stkd-cli     │
                     └────────┬─────────┘
                              │
         ┌────────────────────┼────────────────────┐
         │                    │                    │
         ▼                    ▼                    ▼
 ┌───────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│  stack-core   │  │  stack-github   │  │  stack-gitlab   │
+│  stkd-core   │  │  stkd-github   │  │  stkd-gitlab   │
 └───────────────┘  └────────┬────────┘  └────────┬────────┘
                             │                    │
                             ▼                    ▼
                     ┌─────────────────────────────┐
-                    │    stack-provider-api       │
+                    │    stkd-provider-api       │
                     └─────────────────────────────┘
 
                     ┌──────────────────┐
-                    │   stack-server   │
+                    │   stkd-server   │
                     └────────┬─────────┘
                              │
         ┌────────────────────┼────────────────────┐
         │                    │                    │
         ▼                    ▼                    ▼
 ┌───────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│   stack-db    │  │  stack-github   │  │  stack-gitlab   │
+│   stkd-db    │  │  stkd-github   │  │  stkd-gitlab   │
 └───────────────┘  └─────────────────┘  └─────────────────┘
 ```
 
 ## Feature Flags
 
 ```toml
-# stack-cli Cargo.toml
+# stkd-cli Cargo.toml
 [features]
 default = ["github"]
-github = ["stack-github"]
-gitlab = ["stack-gitlab"]
+github = ["stkd-github"]
+gitlab = ["stkd-gitlab"]
 all-providers = ["github", "gitlab"]
 
-# stack-db Cargo.toml
+# stkd-db Cargo.toml
 [features]
 default = ["sqlite"]
 sqlite = ["sqlx/sqlite"]

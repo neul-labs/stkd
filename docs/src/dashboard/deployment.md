@@ -56,7 +56,7 @@ volumes:
 FROM rust:1.75-slim as backend-builder
 WORKDIR /app
 COPY . .
-RUN cargo build --release --bin stack-server
+RUN cargo build --release --bin stkd-server
 
 # Build frontend
 FROM node:20-alpine as frontend-builder
@@ -69,11 +69,11 @@ RUN npm run build
 # Runtime
 FROM debian:bookworm-slim
 WORKDIR /app
-COPY --from=backend-builder /app/target/release/stack-server .
+COPY --from=backend-builder /app/target/release/stkd-server .
 COPY --from=frontend-builder /app/web/dist ./static
 
 EXPOSE 3000
-CMD ["./stack-server"]
+CMD ["./stkd-server"]
 ```
 
 ### Deploy
@@ -94,7 +94,7 @@ docker compose up -d
 
 ```bash
 # Backend
-cargo build --release --bin stack-server
+cargo build --release --bin stkd-server
 
 # Frontend
 cd web
@@ -141,7 +141,7 @@ server {
 ### 3. Create Systemd Service
 
 ```ini
-# /etc/systemd/system/stack-server.service
+# /etc/systemd/system/stkd-server.service
 [Unit]
 Description=Stack Dashboard Server
 After=network.target postgresql.service
@@ -151,7 +151,7 @@ Type=simple
 User=stack
 WorkingDirectory=/opt/stack
 EnvironmentFile=/opt/stack/.env
-ExecStart=/opt/stack/stack-server
+ExecStart=/opt/stack/stkd-server
 Restart=always
 RestartSec=5
 
@@ -160,8 +160,8 @@ WantedBy=multi-user.target
 ```
 
 ```bash
-sudo systemctl enable stack-server
-sudo systemctl start stack-server
+sudo systemctl enable stkd-server
+sudo systemctl start stkd-server
 ```
 
 ## Cloud Platforms
@@ -280,7 +280,7 @@ cp /data/stack.db /backups/stack-$(date +%Y%m%d).db
 docker compose logs -f stack-dashboard
 
 # Systemd
-journalctl -u stack-server -f
+journalctl -u stkd-server -f
 ```
 
 ### Metrics

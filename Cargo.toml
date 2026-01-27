@@ -1,21 +1,21 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/stack-core",
-    "crates/stack-provider-api",
-    "crates/stack-github",
-    "crates/stack-gitlab",
-    "crates/stack-db",
-    "crates/stack-server",
-    "crates/stack-cli",
+    "crates/stkd-core",
+    "crates/stkd-provider-api",
+    "crates/stkd-github",
+    "crates/stkd-gitlab",
+    "crates/stkd-db",
+    "crates/stkd-server",
+    "crates/stkd-cli",
 ]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
-repository = "https://github.com/dipankar/stack"
-authors = ["Dipankar <dipankar@example.com>"]
+repository = "https://github.com/neul-labs/stkd"
+authors = ["Neul Labs <hello@neullabs.com>"]
 
 [workspace.dependencies]
 # Async runtime

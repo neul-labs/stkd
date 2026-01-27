@@ -14,7 +14,7 @@ Before installing Stack, ensure you have:
 The fastest way to get started is to build from source:
 
 ```bash
-cargo install --git https://github.com/yourusername/stack stack-cli
+cargo install --git https://github.com/neul-labs/stack stkd-cli
 ```
 
 This installs the `gt` command globally.

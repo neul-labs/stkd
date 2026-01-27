@@ -132,7 +132,7 @@ Tips for fewer conflicts:
 
 Open an issue on GitHub:
 
-[https://github.com/dipankar/stack/issues](https://github.com/dipankar/stack/issues)
+[https://github.com/neul-labs/stack/issues](https://github.com/neul-labs/stack/issues)
 
 Include:
 

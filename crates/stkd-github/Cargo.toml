@@ -1,0 +1,44 @@
+[package]
+name = "stkd-github"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "GitHub integration for Stkd"
+
+[dependencies]
+stkd-core = { path = "../stkd-core" }
+stkd-provider-api = { path = "../stkd-provider-api" }
+
+# Async traits
+async-trait = { workspace = true }
+
+# Git
+git2 = { workspace = true }
+
+# Async
+tokio = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# HTTP
+reqwest = { workspace = true }
+graphql_client = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+
+# Time
+chrono = { workspace = true }
+
+# Utilities
+dirs = { workspace = true }
+url = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

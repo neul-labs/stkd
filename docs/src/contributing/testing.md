@@ -9,7 +9,7 @@ This guide covers testing practices for Stack.
 Test individual functions and methods:
 
 ```bash
-cargo test -p stack-core
+cargo test -p stkd-core
 ```
 
 Located in `src/` files with `#[cfg(test)]` modules.

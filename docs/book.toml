@@ -11,8 +11,8 @@ build-dir = "book"
 create-missing = false
 
 [output.html]
-git-repository-url = "https://github.com/yourusername/stack"
-edit-url-template = "https://github.com/yourusername/stack/edit/main/docs/{path}"
+git-repository-url = "https://github.com/neul-labs/stack"
+edit-url-template = "https://github.com/neul-labs/stack/edit/main/docs/{path}"
 default-theme = "rust"
 preferred-dark-theme = "coal"
 smart-punctuation = true

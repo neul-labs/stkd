@@ -60,15 +60,15 @@ gt sync  # Automatically rebases the stack
 === "Cargo (Recommended)"
 
     ```bash
-    cargo install stack-cli
+    cargo install stkd-cli
     ```
 
 === "From Source"
 
     ```bash
-    git clone https://github.com/dipankar/stack
+    git clone https://github.com/neul-labs/stack
     cd stack
-    cargo install --path crates/stack-cli
+    cargo install --path crates/stkd-cli
     ```
 
 ## Getting Started
@@ -82,4 +82,4 @@ gt sync  # Automatically rebases the stack
 
 - Check the [FAQ](reference/faq.md) for common questions
 - See [Troubleshooting](reference/troubleshooting.md) for solutions
-- [Open an issue](https://github.com/dipankar/stack/issues) on GitHub
+- [Open an issue](https://github.com/neul-labs/stack/issues) on GitHub

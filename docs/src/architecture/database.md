@@ -1,6 +1,6 @@
 # Database Layer
 
-The `stack-db` crate provides a database abstraction layer that supports both SQLite and PostgreSQL.
+The `stkd-db` crate provides a database abstraction layer that supports both SQLite and PostgreSQL.
 
 ## Architecture
 
@@ -36,13 +36,13 @@ Build with specific backend:
 
 ```bash
 # SQLite only (default)
-cargo build -p stack-db
+cargo build -p stkd-db
 
 # PostgreSQL only
-cargo build -p stack-db --no-default-features --features postgres
+cargo build -p stkd-db --no-default-features --features postgres
 
 # Both
-cargo build -p stack-db --features postgres
+cargo build -p stkd-db --features postgres
 ```
 
 ## Data Models

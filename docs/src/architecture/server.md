@@ -1,6 +1,6 @@
 # Web Server Architecture
 
-The `stack-server` crate provides an Axum-based REST API server for the web dashboard.
+The `stkd-server` crate provides an Axum-based REST API server for the web dashboard.
 
 ## Architecture
 

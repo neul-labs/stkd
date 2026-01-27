@@ -135,11 +135,11 @@ Control log output with `RUST_LOG`:
 
 ```bash
 # Verbose
-RUST_LOG=debug ./stack-server
+RUST_LOG=debug ./stkd-server
 
 # Quiet
-RUST_LOG=warn ./stack-server
+RUST_LOG=warn ./stkd-server
 
 # Specific modules
-RUST_LOG=stack_server=debug,tower_http=info ./stack-server
+RUST_LOG=stkd_server=debug,tower_http=info ./stkd-server
 ```
