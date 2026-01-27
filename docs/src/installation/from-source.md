@@ -47,21 +47,21 @@ cargo install stkd-cli
 
 ```bash
 # Latest release
-cargo install --git https://github.com/neul-labs/stack stkd-cli
+cargo install --git https://github.com/neul-labs/stkd stkd-cli
 
 # Specific version
-cargo install --git https://github.com/neul-labs/stack --tag v0.1.0 stkd-cli
+cargo install --git https://github.com/neul-labs/stkd --tag v0.1.0 stkd-cli
 
 # Development version
-cargo install --git https://github.com/neul-labs/stack --branch main stkd-cli
+cargo install --git https://github.com/neul-labs/stkd --branch main stkd-cli
 ```
 
 ### Local Development
 
 ```bash
 # Clone the repository
-git clone https://github.com/neul-labs/stack
-cd stack
+git clone https://github.com/neul-labs/stkd
+cd stkd
 
 # Build in debug mode
 cargo build

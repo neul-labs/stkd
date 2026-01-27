@@ -3,6 +3,9 @@ name = "stkd-core"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
 description = "Core library for Stkd - stacked diffs for Git"
 
 [dependencies]

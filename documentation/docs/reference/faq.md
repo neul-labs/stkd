@@ -132,7 +132,7 @@ Tips for fewer conflicts:
 
 Open an issue on GitHub:
 
-[https://github.com/neul-labs/stack/issues](https://github.com/neul-labs/stack/issues)
+[https://github.com/neul-labs/stkd/issues](https://github.com/neul-labs/stkd/issues)
 
 Include:
 

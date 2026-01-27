@@ -3,6 +3,9 @@ name = "stkd-server"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
 description = "Web API server for Stkd dashboard - provides REST API and WebSocket support"
 
 [[bin]]
@@ -11,10 +14,10 @@ path = "src/main.rs"
 
 [dependencies]
 # Internal crates
-stkd-db = { path = "../stkd-db" }
-stkd-provider-api = { path = "../stkd-provider-api" }
-stkd-github = { path = "../stkd-github" }
-stkd-gitlab = { path = "../stkd-gitlab" }
+stkd-db = { path = "../stkd-db", version = "0.1.0" }
+stkd-provider-api = { path = "../stkd-provider-api", version = "0.1.0" }
+stkd-github = { path = "../stkd-github", version = "0.1.0" }
+stkd-gitlab = { path = "../stkd-gitlab", version = "0.1.0" }
 
 # Async runtime
 tokio = { workspace = true }

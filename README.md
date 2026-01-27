@@ -1,6 +1,6 @@
-[![CI](https://github.com/neul-labs/stack/actions/workflows/ci.yml/badge.svg)](https://github.com/neul-labs/stack/actions/workflows/ci.yml)
+[![CI](https://github.com/neul-labs/stkd/actions/workflows/ci.yml/badge.svg)](https://github.com/neul-labs/stkd/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Docs](https://img.shields.io/badge/docs-neullabs.com-green.svg)](https://docs.neullabs.com/stack)
+[![Docs](https://img.shields.io/badge/docs-neullabs.com-green.svg)](https://docs.neullabs.com/stkd)
 
 # Stack
 
@@ -25,7 +25,7 @@ When you update a branch, Stack automatically rebases all dependent branches. Wh
 
 ```bash
 # Quick install (downloads binary or builds from source)
-curl -fsSL https://raw.githubusercontent.com/neul-labs/stack/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/neul-labs/stkd/main/install.sh | bash
 
 # Or build from source
 cargo install --path crates/stkd-cli
@@ -93,11 +93,11 @@ See Stack in action with an interactive demo:
 
 ## Documentation
 
-Full documentation at **[docs.neullabs.com/stack](https://docs.neullabs.com/stack)**:
+Full documentation at **[docs.neullabs.com/stkd](https://docs.neullabs.com/stkd)**:
 
-- [Getting Started](https://docs.neullabs.com/stack/getting-started)
-- [Command Reference](https://docs.neullabs.com/stack/commands)
-- [Tutorials](https://docs.neullabs.com/stack/tutorials)
+- [Getting Started](https://docs.neullabs.com/stkd/getting-started)
+- [Command Reference](https://docs.neullabs.com/stkd/commands)
+- [Tutorials](https://docs.neullabs.com/stkd/tutorials)
 
 ## Architecture
 
@@ -125,8 +125,8 @@ crates/
 ## Contributing
 
 ```bash
-git clone https://github.com/neul-labs/stack
-cd stack
+git clone https://github.com/neul-labs/stkd
+cd stkd
 cargo build
 cargo test
 ```

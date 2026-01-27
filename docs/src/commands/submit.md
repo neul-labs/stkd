@@ -154,7 +154,7 @@ Stack automatically adds a stack visualization to PR descriptions:
 - #44
 
 ---
-*Managed by [Stack](https://github.com/neul-labs/stack)*
+*Managed by [Stack](https://github.com/neul-labs/stkd)*
 ```
 
 The current PR is highlighted in bold.

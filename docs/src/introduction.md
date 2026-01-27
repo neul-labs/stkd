@@ -78,5 +78,5 @@ Stack supports the following Git hosting providers:
 ## Getting Help
 
 - **Documentation**: You're reading it!
-- **Issues**: [GitHub Issues](https://github.com/neul-labs/stack/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/neul-labs/stack/discussions)
+- **Issues**: [GitHub Issues](https://github.com/neul-labs/stkd/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/neul-labs/stkd/discussions)

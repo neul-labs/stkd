@@ -23,8 +23,8 @@ For the latest development version:
 
 ```bash
 # Clone the repository
-git clone https://github.com/neul-labs/stack
-cd stack
+git clone https://github.com/neul-labs/stkd
+cd stkd
 
 # Build and install
 cargo install --path crates/stkd-cli

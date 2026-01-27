@@ -3,6 +3,9 @@ name = "stkd-cli"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
 description = "CLI for Stkd - stacked diffs for Git"
 
 [[bin]]
@@ -10,10 +13,10 @@ name = "gt"
 path = "src/main.rs"
 
 [dependencies]
-stkd-core = { path = "../stkd-core" }
-stkd-provider-api = { path = "../stkd-provider-api" }
-stkd-github = { path = "../stkd-github" }
-stkd-gitlab = { path = "../stkd-gitlab" }
+stkd-core = { path = "../stkd-core", version = "0.1.0" }
+stkd-provider-api = { path = "../stkd-provider-api", version = "0.1.0" }
+stkd-github = { path = "../stkd-github", version = "0.1.0" }
+stkd-gitlab = { path = "../stkd-gitlab", version = "0.1.0" }
 
 # Git
 git2 = { workspace = true }

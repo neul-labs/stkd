@@ -41,8 +41,8 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 ```bash
 # Clone the repository
-git clone https://github.com/neul-labs/stack
-cd stack
+git clone https://github.com/neul-labs/stkd
+cd stkd
 
 # Build in debug mode
 cargo build

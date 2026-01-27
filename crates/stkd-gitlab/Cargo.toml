@@ -3,11 +3,14 @@ name = "stkd-gitlab"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
 description = "GitLab integration for Stkd"
 
 [dependencies]
-stkd-core = { path = "../stkd-core" }
-stkd-provider-api = { path = "../stkd-provider-api" }
+stkd-core = { path = "../stkd-core", version = "0.1.0" }
+stkd-provider-api = { path = "../stkd-provider-api", version = "0.1.0" }
 
 # Async traits
 async-trait = { workspace = true }

@@ -66,8 +66,8 @@ gt sync  # Automatically rebases the stack
 === "From Source"
 
     ```bash
-    git clone https://github.com/neul-labs/stack
-    cd stack
+    git clone https://github.com/neul-labs/stkd
+    cd stkd
     cargo install --path crates/stkd-cli
     ```
 
@@ -82,4 +82,4 @@ gt sync  # Automatically rebases the stack
 
 - Check the [FAQ](reference/faq.md) for common questions
 - See [Troubleshooting](reference/troubleshooting.md) for solutions
-- [Open an issue](https://github.com/neul-labs/stack/issues) on GitHub
+- [Open an issue](https://github.com/neul-labs/stkd/issues) on GitHub

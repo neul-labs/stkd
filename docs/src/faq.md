@@ -188,7 +188,7 @@ See [Contributing](./contributing/README.md) for guidelines.
 
 ### Where do I report bugs?
 
-Open an issue on [GitHub](https://github.com/neul-labs/stack/issues).
+Open an issue on [GitHub](https://github.com/neul-labs/stkd/issues).
 
 ### How do I request a feature?
 

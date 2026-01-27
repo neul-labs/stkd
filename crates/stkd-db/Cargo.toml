@@ -3,6 +3,9 @@ name = "stkd-db"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
 description = "Database abstraction layer for Stkd - supports SQLite and PostgreSQL"
 
 [features]

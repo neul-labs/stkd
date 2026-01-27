@@ -245,4 +245,4 @@ Include in your bug report:
 4. Full command and output
 5. Steps to reproduce
 
-Open issues at: [github.com/neul-labs/stack/issues](https://github.com/neul-labs/stack/issues)
+Open issues at: [github.com/neul-labs/stkd/issues](https://github.com/neul-labs/stkd/issues)

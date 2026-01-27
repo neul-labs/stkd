@@ -422,7 +422,7 @@ fn generate_stack_body(
     }
 
     body.push_str("\n---\n");
-    body.push_str("*Managed by [Stack](https://github.com/neul-labs/stack)*\n");
+    body.push_str("*Managed by [Stack](https://github.com/neul-labs/stkd)*\n");
 
     body
 }

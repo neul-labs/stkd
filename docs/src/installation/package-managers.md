@@ -28,7 +28,7 @@ Pre-built binaries are available for each release:
 
 ### Download Links
 
-Visit the [Releases](https://github.com/neul-labs/stack/releases) page and download the appropriate binary for your platform:
+Visit the [Releases](https://github.com/neul-labs/stkd/releases) page and download the appropriate binary for your platform:
 
 | Platform | Architecture | Download |
 |----------|--------------|----------|
@@ -44,7 +44,7 @@ Visit the [Releases](https://github.com/neul-labs/stack/releases) page and downl
 
 ```bash
 # Download and extract
-curl -LO https://github.com/neul-labs/stack/releases/latest/download/stack-x86_64-unknown-linux-gnu.tar.gz
+curl -LO https://github.com/neul-labs/stkd/releases/latest/download/stack-x86_64-unknown-linux-gnu.tar.gz
 tar xzf stack-x86_64-unknown-linux-gnu.tar.gz
 
 # Move to PATH
@@ -58,7 +58,7 @@ gt --version
 
 ```powershell
 # Download
-Invoke-WebRequest -Uri "https://github.com/neul-labs/stack/releases/latest/download/stack-x86_64-pc-windows-msvc.zip" -OutFile "stack.zip"
+Invoke-WebRequest -Uri "https://github.com/neul-labs/stkd/releases/latest/download/stack-x86_64-pc-windows-msvc.zip" -OutFile "stack.zip"
 
 # Extract
 Expand-Archive -Path "stack.zip" -DestinationPath "C:\Program Files\Stack"
@@ -72,7 +72,7 @@ Expand-Archive -Path "stack.zip" -DestinationPath "C:\Program Files\Stack"
 ```nix
 # flake.nix
 {
-  inputs.stack.url = "github:neul-labs/stack";
+  inputs.stack.url = "github:neul-labs/stkd";
 
   # Use as:
   # stack.packages.x86_64-linux.default
@@ -101,7 +101,7 @@ All release binaries are signed. You can verify the signature:
 
 ```bash
 # Download the signature
-curl -LO https://github.com/neul-labs/stack/releases/latest/download/stack-x86_64-unknown-linux-gnu.tar.gz.sig
+curl -LO https://github.com/neul-labs/stkd/releases/latest/download/stack-x86_64-unknown-linux-gnu.tar.gz.sig
 
 # Verify (requires GPG and our public key)
 gpg --verify stack-x86_64-unknown-linux-gnu.tar.gz.sig stack-x86_64-unknown-linux-gnu.tar.gz

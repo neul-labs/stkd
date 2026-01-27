@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Stack Demo Script
-# https://github.com/neul-labs/stack
+# https://github.com/neul-labs/stkd
 #
 # This script demonstrates the Stack workflow using a temporary repository.
 #
@@ -418,8 +418,8 @@ final_summary() {
     echo -e "  ${CYAN}gt sync${NC}                    - Sync with remote and restack"
     echo -e "  ${CYAN}gt land --stack${NC}            - Merge your stack when approved"
     echo ""
-    echo -e "${DIM}Documentation: https://docs.neullabs.com/stack${NC}"
-    echo -e "${DIM}Repository:    https://github.com/neul-labs/stack${NC}"
+    echo -e "${DIM}Documentation: https://docs.neullabs.com/stkd${NC}"
+    echo -e "${DIM}Repository:    https://github.com/neul-labs/stkd${NC}"
     echo ""
 
     if [[ "$AUTO_MODE" != "true" ]]; then
