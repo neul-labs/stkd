@@ -8,6 +8,8 @@ members = [
     "crates/stkd-db",
     "crates/stkd-server",
     "crates/stkd-cli",
+    "crates/stkd-engine",
+    "crates/stkd-mcp",
 ]
 
 [workspace.package]
@@ -17,6 +19,7 @@ license = "Apache-2.0"
 repository = "https://github.com/neul-labs/stkd"
 homepage = "https://docs.neullabs.com/stkd"
 documentation = "https://docs.neullabs.com/stkd"
+readme = "README.md"
 authors = ["Neul Labs <hello@neullabs.com>"]
 
 [workspace.dependencies]
@@ -57,6 +60,7 @@ shellexpand = "3.1"
 url = "2.5"
 urlencoding = "2.1"
 async-trait = "0.1"
+fslock = "0.2"
 
 # Terminal
 colored = "2.1"

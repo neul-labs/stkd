@@ -3,11 +3,8 @@
 use anyhow::{Context, Result};
 use clap::Args;
 use stkd_core::Repository;
-use stkd_provider_api::{CreateMergeRequest, UpdateMergeRequest};
-use std::fs;
 
 use crate::output;
-use crate::provider_context::ProviderContext;
 
 #[derive(Args)]
 pub struct SubmitArgs {
@@ -68,15 +65,12 @@ pub struct SubmitArgs {
     dry_run: bool,
 }
 
-pub async fn execute(args: SubmitArgs) -> Result<()> {
+pub async fn execute(args: SubmitArgs, json: bool) -> Result<()> {
     let repo = Repository::open(".")?;
-
-    // Get current branch
     let current = repo.current_branch()?.ok_or_else(|| {
         anyhow::anyhow!("Not on a branch")
     })?;
 
-    // Check if current branch is tracked
     if !repo.storage().is_tracked(&current) {
         anyhow::bail!(
             "Branch '{}' is not tracked. Run 'gt track' first.",
@@ -84,48 +78,58 @@ pub async fn execute(args: SubmitArgs) -> Result<()> {
         );
     }
 
-    let graph = repo.load_graph()?;
-
-    // Get branches to submit based on options
-    let branches: Vec<String> = if !args.only.is_empty() {
-        // Specific branches only
-        args.only.clone()
-    } else if let Some(ref from_branch) = args.from {
-        // From specific branch to tip
-        let mut to_submit = vec![from_branch.clone()];
-        to_submit.extend(
-            graph.descendants(from_branch).iter().map(|s| s.to_string())
-        );
-        to_submit
-    } else if let Some(ref to_branch) = args.to {
-        // From root to specific branch
-        graph.ancestors(to_branch).iter()
-            .filter(|b| !graph.is_trunk(b))
-            .map(|s| s.to_string())
-            .chain(std::iter::once(to_branch.clone()))
-            .collect()
-    } else if args.stack {
-        let mut to_submit = vec![current.clone()];
-        to_submit.extend(
-            graph.descendants(&current).iter().map(|s| s.to_string())
-        );
-        to_submit
-    } else {
-        vec![current.clone()]
+    let opts = stkd_engine::SubmitOptions {
+        stack: args.stack,
+        draft: args.draft,
+        push_only: args.push_only,
+        no_push: args.no_push,
+        update: args.update,
+        title: args.title,
+        body: args.body,
+        reviewers: args.reviewers,
+        labels: args.labels,
+        template: args.template,
+        only: args.only,
+        from: args.from,
+        to: args.to,
+        dry_run: args.dry_run,
     };
 
+    let graph = repo.load_graph()?;
+    let branches = stkd_engine::select_branches(&repo, &graph, &current, &opts)?;
+
     if branches.is_empty() {
-        output::warn("No branches to submit");
+        if json {
+            println!("{}", serde_json::to_string_pretty(&serde_json::json!({"skipped": true, "reason": "No branches to submit" }))?);
+        } else {
+            output::warn("No branches to submit");
+        }
         return Ok(());
     }
 
-    // Validate custom title/body only for single branch
-    if branches.len() > 1 && (args.title.is_some() || args.body.is_some()) {
+    if branches.len() > 1 && (opts.title.is_some() || opts.body.is_some()) {
         anyhow::bail!("--title and --body can only be used when submitting a single branch");
     }
 
-    // Dry run mode
     if args.dry_run {
+        if json {
+            let dry_run_info: Vec<serde_json::Value> = branches.iter().map(|branch| {
+                let info = repo.storage().load_branch(branch).ok().flatten();
+                let base = info.as_ref().map(|i| {
+                    if graph.is_trunk(&i.parent) { repo.trunk().to_string() } else { i.parent.clone() }
+                }).unwrap_or_else(|| repo.trunk().to_string());
+                let has_mr = info.as_ref().and_then(|i| i.merge_request_id).is_some();
+                serde_json::json!({
+                    "branch": branch,
+                    "base": base,
+                    "has_mr": has_mr,
+                    "action": if has_mr { if args.update { "update" } else { "skip" } } else { "create" }
+                })
+            }).collect();
+            println!("{}", serde_json::to_string_pretty(&serde_json::json!({"dry_run": true, "branches": dry_run_info }))?);
+            return Ok(());
+        }
+
         output::info("Dry run - showing what would be done:");
         output::info("");
 
@@ -154,11 +158,11 @@ pub async fn execute(args: SubmitArgs) -> Result<()> {
             }
             if !args.push_only {
                 output::info(&format!("  {} {} for {} -> {}", output::ARROW, mr_action, branch, base));
-                if !args.reviewers.is_empty() {
-                    output::info(&format!("       Reviewers: {}", args.reviewers.join(", ")));
+                if !opts.reviewers.is_empty() {
+                    output::info(&format!("       Reviewers: {}", opts.reviewers.join(", ")));
                 }
-                if !args.labels.is_empty() {
-                    output::info(&format!("       Labels: {}", args.labels.join(", ")));
+                if !opts.labels.is_empty() {
+                    output::info(&format!("       Labels: {}", opts.labels.join(", ")));
                 }
             }
         }
@@ -193,236 +197,40 @@ pub async fn execute(args: SubmitArgs) -> Result<()> {
 
     // If push-only, we're done
     if args.push_only {
-        output::success("Push complete");
+        if json {
+            println!("{}", serde_json::to_string_pretty(&serde_json::json!({"pushed": branches, "success": true }))?);
+        } else {
+            output::success("Push complete");
+        }
         return Ok(());
     }
 
-    // Create provider context (auto-detects GitHub/GitLab from remote)
-    let ctx = ProviderContext::from_repo(&repo).await?;
+    // Create provider context
+    let ctx = stkd_engine::ProviderContext::from_repo(&repo).await?;
 
-    output::info(&format!("Repository: {} ({})", ctx.full_name(), ctx.provider_type));
+    if !json {
+        output::info(&format!("Repository: {} ({})", ctx.full_name(), ctx.provider_type));
+    }
 
-    // Load PR template if requested
-    let template_body = if args.template {
-        load_pr_template(&repo)
+    let result = stkd_engine::submit(&repo, opts, ctx.provider(), &ctx.repo_id).await?;
+
+    if json {
+        println!("{}", serde_json::to_string_pretty(&result)?);
     } else {
-        None
-    };
-
-    // Build stack info for MR bodies
-    let stack_branches: Vec<(String, Option<u64>)> = {
-        let all_stack = graph.stack(&current);
-        all_stack.iter()
-            .map(|b| {
-                let mr_num = repo.storage()
-                    .load_branch(b)
-                    .ok()
-                    .flatten()
-                    .and_then(|info| info.merge_request_id);
-                (b.to_string(), mr_num)
-            })
-            .collect()
-    };
-
-    // Create/update MRs
-    for branch in &branches {
-        let info = repo.storage()
-            .load_branch(branch)?
-            .context("Branch info not found")?;
-
-        // Determine base branch (parent)
-        let base = if graph.is_trunk(&info.parent) {
-            repo.trunk().to_string()
-        } else {
-            info.parent.clone()
-        };
-
-        // Check if MR already exists
-        if let Some(mr_number) = info.merge_request_id {
-            // Update existing MR
-            if args.update {
-                output::info(&format!("  {} Updating MR #{} for {}...", output::ARROW, mr_number, branch));
-
-                // Generate new body with stack info
-                let custom_body = args.body.as_deref()
-                    .or(template_body.as_deref());
-                let new_body = generate_stack_body(&stack_branches, branch, custom_body);
-
-                let update = UpdateMergeRequest {
-                    title: args.title.clone(),
-                    body: Some(new_body),
-                    target_branch: Some(base),
-                    labels: if args.labels.is_empty() { None } else { Some(args.labels.clone()) },
-                    ..Default::default()
-                };
-
-                ctx.provider().update_mr(&ctx.repo_id, mr_number.into(), update)
-                    .await
-                    .context("Failed to update MR")?;
-
-                output::success(&format!("Updated MR #{} for {}", mr_number, branch));
-
-                if !args.reviewers.is_empty() {
-                    output::hint("Note: Reviewers can only be set when creating new MRs");
-                }
-            } else {
-                output::info(&format!("  {} MR #{} exists for {} (use --update to modify)", output::ARROW, mr_number, branch));
-            }
-        } else {
-            // Create new MR
-            output::info(&format!("  {} Creating MR for {}...", output::ARROW, branch));
-
-            // Generate title from branch name if not provided
-            let title = args.title.clone().unwrap_or_else(|| {
-                // Convert branch name to title
-                // e.g., "feature/add-login" -> "Add login"
-                let name = branch.rsplit('/').next().unwrap_or(branch);
-                let title = name.replace('-', " ").replace('_', " ");
-                // Capitalize first letter
-                let mut chars = title.chars();
-                match chars.next() {
-                    None => String::new(),
-                    Some(c) => c.to_uppercase().chain(chars).collect(),
-                }
-            });
-
-            // Generate body with stack info and optional template
-            let custom_body = args.body.as_deref()
-                .or(template_body.as_deref());
-            let body = generate_stack_body(&stack_branches, branch, custom_body);
-
-            let create = CreateMergeRequest {
-                title: title.clone(),
-                source_branch: branch.clone(),
-                target_branch: base,
-                body: Some(body),
-                draft: args.draft,
-                labels: args.labels.clone(),
-                reviewers: args.reviewers.clone(),
-                ..Default::default()
-            };
-
-            let mr = ctx.provider().create_mr(&ctx.repo_id, create)
-                .await
-                .context("Failed to create MR")?;
-
-            // Save MR number to branch info
-            repo.storage().update_branch(branch, |b| {
-                b.merge_request_id = Some(mr.number);
-                b.merge_request_url = Some(mr.web_url.clone());
-            })?;
-
-            let draft_indicator = if args.draft { " (draft)" } else { "" };
-            output::success(&format!("Created MR #{}{} for {}", mr.number, draft_indicator, branch));
-            output::info(&format!("     {}", mr.web_url));
-
-            if !args.reviewers.is_empty() {
-                output::info(&format!("     Reviewers: {}", args.reviewers.join(", ")));
-            }
-            if !args.labels.is_empty() {
-                output::info(&format!("     Labels: {}", args.labels.join(", ")));
-            }
+        for created in &result.created {
+            let draft_indicator = if created.draft { " (draft)" } else { "" };
+            output::success(&format!("Created MR #{}{} for {}", created.number, draft_indicator, created.branch));
+            output::info(&format!("     {}", created.url));
         }
-    }
-
-    // Update all MRs in the stack to reflect current stack state
-    if args.stack && !args.update {
-        output::info("Updating stack visualization in all MRs...");
-
-        // Refresh stack info with new MR numbers
-        let updated_stack: Vec<(String, Option<u64>)> = {
-            let all_stack = graph.stack(&current);
-            all_stack.iter()
-                .map(|b| {
-                    let mr_num = repo.storage()
-                        .load_branch(b)
-                        .ok()
-                        .flatten()
-                        .and_then(|info| info.merge_request_id);
-                    (b.to_string(), mr_num)
-                })
-                .collect()
-        };
-
-        for (branch_name, mr_number) in &updated_stack {
-            if let Some(mr_num) = mr_number {
-                let body = generate_stack_body(&updated_stack, branch_name, None);
-                let update = UpdateMergeRequest {
-                    body: Some(body),
-                    ..Default::default()
-                };
-
-                if let Err(e) = ctx.provider().update_mr(&ctx.repo_id, (*mr_num).into(), update).await {
-                    output::warn(&format!("Failed to update stack info in MR #{}: {}", mr_num, e));
-                }
-            }
+        for updated in &result.updated {
+            output::success(&format!("Updated MR #{} for {}", updated.number, updated.branch));
         }
+        for skipped in &result.skipped {
+            output::info(&format!("  {} MR exists for {} (use --update to modify)", output::ARROW, skipped));
+        }
+        output::success("Submit complete");
+        output::hint("Run 'gt log' to see MR status");
     }
-
-    output::success("Submit complete");
-    output::hint("Run 'gt log' to see MR status");
 
     Ok(())
-}
-
-/// Load PR template from common locations
-fn load_pr_template(repo: &Repository) -> Option<String> {
-    let workdir = repo.git().path().parent()?;
-
-    // Check common template locations
-    let template_paths = [
-        ".github/PULL_REQUEST_TEMPLATE.md",
-        ".github/pull_request_template.md",
-        ".github/PULL_REQUEST_TEMPLATE/default.md",
-        "docs/pull_request_template.md",
-        ".gitlab/merge_request_templates/Default.md",
-    ];
-
-    for template_path in &template_paths {
-        let full_path = workdir.join(template_path);
-        if full_path.exists() {
-            if let Ok(content) = fs::read_to_string(&full_path) {
-                output::info(&format!("Using PR template from {}", template_path));
-                return Some(content);
-            }
-        }
-    }
-
-    None
-}
-
-/// Generate the body for a merge request with stack visualization.
-fn generate_stack_body(
-    stack: &[(String, Option<u64>)],
-    current_branch: &str,
-    custom_body: Option<&str>,
-) -> String {
-    let mut body = String::new();
-
-    // Add custom body if provided
-    if let Some(custom) = custom_body {
-        body.push_str(custom);
-        body.push_str("\n\n");
-    }
-
-    // Add stack visualization
-    body.push_str("---\n\n");
-    body.push_str("## Stack\n\n");
-
-    for (branch, mr_num) in stack.iter().rev() {
-        let is_current = branch == current_branch;
-        let prefix = if is_current { "**" } else { "" };
-        let suffix = if is_current { "** (this MR)" } else { "" };
-
-        if let Some(num) = mr_num {
-            body.push_str(&format!("- {}#{}{}\n", prefix, num, suffix));
-        } else {
-            body.push_str(&format!("- {}`{}`{}\n", prefix, branch, suffix));
-        }
-    }
-
-    body.push_str("\n---\n");
-    body.push_str("*Managed by [Stack](https://github.com/neul-labs/stkd)*\n");
-
-    body
 }

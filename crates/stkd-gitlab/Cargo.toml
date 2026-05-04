@@ -7,6 +7,8 @@ repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
 description = "GitLab integration for Stkd"
+readme.workspace = true
+authors.workspace = true
 
 [dependencies]
 stkd-core = { path = "../stkd-core", version = "0.1.0" }

@@ -31,6 +31,89 @@ use crate::branch::BranchInfo;
 use crate::config::StackConfig;
 use crate::{Error, Result};
 
+/// Lifecycle phase of a multi-step Stack operation.
+///
+/// This enum replaces the previous `operation` + `conflict_state` pair with a
+/// unified state machine that enforces valid transitions.
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum OperationPhase {
+    /// No operation is in progress.
+    #[default]
+    Idle,
+    /// Operation is actively running.
+    InProgress {
+        /// The operation being executed.
+        op: OngoingOperation,
+        /// Current step (0-indexed).
+        step: usize,
+        /// Total number of steps.
+        total: usize,
+    },
+    /// Operation paused waiting for conflict resolution.
+    Conflict {
+        /// The operation that was interrupted.
+        op: OngoingOperation,
+        /// Details about the conflict.
+        conflict: ConflictState,
+    },
+    /// Operation completed successfully.
+    Completed,
+    /// Operation was aborted by the user.
+    Aborted,
+}
+
+impl OperationPhase {
+    /// Human-readable name of the current phase.
+    pub fn name(&self) -> &'static str {
+        match self {
+            OperationPhase::Idle => "idle",
+            OperationPhase::InProgress { .. } => "in_progress",
+            OperationPhase::Conflict { .. } => "conflict",
+            OperationPhase::Completed => "completed",
+            OperationPhase::Aborted => "aborted",
+        }
+    }
+
+    /// Check if an operation is in progress (including conflict state).
+    pub fn is_active(&self) -> bool {
+        matches!(self, OperationPhase::InProgress { .. } | OperationPhase::Conflict { .. })
+    }
+
+    /// Get the underlying operation, if any.
+    pub fn operation(&self) -> Option<&OngoingOperation> {
+        match self {
+            OperationPhase::InProgress { op, .. } | OperationPhase::Conflict { op, .. } => Some(op),
+            _ => None,
+        }
+    }
+
+    /// Validate and perform a state transition.
+    ///
+    /// Returns an error if the transition is not allowed.
+    pub fn transition(self, new_phase: OperationPhase) -> Result<Self> {
+        match (&self, &new_phase) {
+            // Reset to Idle is always allowed from terminal states
+            (OperationPhase::Completed | OperationPhase::Aborted, OperationPhase::Idle) => Ok(new_phase),
+            // Idle can start an operation
+            (OperationPhase::Idle, OperationPhase::InProgress { .. }) => Ok(new_phase),
+            // InProgress can complete, abort, or hit a conflict
+            (OperationPhase::InProgress { .. }, OperationPhase::Completed) => Ok(new_phase),
+            (OperationPhase::InProgress { .. }, OperationPhase::Aborted) => Ok(new_phase),
+            (OperationPhase::InProgress { .. }, OperationPhase::Conflict { .. }) => Ok(new_phase),
+            // Conflict can continue (back to InProgress) or abort
+            (OperationPhase::Conflict { .. }, OperationPhase::InProgress { .. }) => Ok(new_phase),
+            (OperationPhase::Conflict { .. }, OperationPhase::Aborted) => Ok(new_phase),
+            // Any state can be reset to Idle (e.g., force abort)
+            (_, OperationPhase::Idle) => Ok(new_phase),
+            _ => Err(Error::InvalidStateTransition {
+                from: self.name().to_string(),
+                to: new_phase.name().to_string(),
+            }),
+        }
+    }
+}
+
 /// Current state of a Stack-enabled repository.
 ///
 /// This structure tracks the repository's operational state, including
@@ -45,19 +128,13 @@ pub struct StackState {
     #[serde(default)]
     pub pending_restack: Vec<String>,
 
-    /// State of an in-progress rebase that encountered conflicts.
-    /// When set, the user needs to resolve conflicts and run `gt continue`.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub conflict_state: Option<ConflictState>,
+    /// Current lifecycle phase of the repository operation.
+    #[serde(default)]
+    pub phase: OperationPhase,
 
     /// Timestamp of the last successful sync with the remote.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub last_sync: Option<chrono::DateTime<chrono::Utc>>,
-
-    /// An operation that's currently in progress.
-    /// Used to resume operations after conflicts or errors.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub operation: Option<OngoingOperation>,
 }
 
 impl Default for StackState {
@@ -65,9 +142,8 @@ impl Default for StackState {
         Self {
             current_branch: None,
             pending_restack: vec![],
-            conflict_state: None,
+            phase: OperationPhase::Idle,
             last_sync: None,
-            operation: None,
         }
     }
 }
@@ -348,45 +424,163 @@ impl Storage {
     }
 
     // ========================================================================
-    // Operations
+    // Operations (state machine)
     // ========================================================================
 
-    /// Start an operation
-    pub fn start_operation(&self, op: OngoingOperation) -> Result<()> {
-        self.update_state(|state| {
-            state.operation = Some(op);
-        })?;
+    /// Start an operation, transitioning from Idle to InProgress.
+    ///
+    /// Returns an error if another operation is already active.
+    pub fn start_operation(&self, op: OngoingOperation, total_steps: usize) -> Result<()> {
+        let mut state = self.load_state()?;
+        let new_phase = OperationPhase::InProgress {
+            op,
+            step: 0,
+            total: total_steps,
+        };
+        state.phase = state.phase.transition(new_phase)?;
+        self.save_state(&state)?;
         Ok(())
     }
 
-    /// Complete the current operation
+    /// Advance the operation to the next step.
+    pub fn advance_operation(&self, step: usize) -> Result<()> {
+        let mut state = self.load_state()?;
+        if let OperationPhase::InProgress { ref op, ref total, .. } = state.phase {
+            state.phase = OperationPhase::InProgress {
+                op: op.clone(),
+                step,
+                total: *total,
+            };
+            self.save_state(&state)?;
+        }
+        Ok(())
+    }
+
+    /// Mark the current operation as completed.
+    ///
+    /// Transitions from InProgress to Completed, then resets to Idle.
     pub fn complete_operation(&self) -> Result<()> {
-        self.update_state(|state| {
-            state.operation = None;
-            state.conflict_state = None;
-        })?;
+        let mut state = self.load_state()?;
+        state.phase = state.phase.transition(OperationPhase::Completed)?;
+        state.phase = state.phase.transition(OperationPhase::Idle)?;
+        self.save_state(&state)?;
         Ok(())
     }
 
-    /// Get current operation
-    pub fn current_operation(&self) -> Result<Option<OngoingOperation>> {
-        Ok(self.load_state()?.operation)
-    }
-
-    /// Set conflict state
+    /// Pause the current operation due to a conflict.
+    ///
+    /// Transitions from InProgress to Conflict.
     pub fn set_conflict(&self, conflict: ConflictState) -> Result<()> {
-        self.update_state(|state| {
-            state.conflict_state = Some(conflict);
-        })?;
+        let mut state = self.load_state()?;
+        let op = match &state.phase {
+            OperationPhase::InProgress { op, .. } => op.clone(),
+            _ => return Ok(()),
+        };
+        let conflict_phase = OperationPhase::Conflict { op, conflict };
+        state.phase = state.phase.transition(conflict_phase)?;
+        self.save_state(&state)?;
         Ok(())
     }
 
-    /// Clear conflict state
-    pub fn clear_conflict(&self) -> Result<()> {
-        self.update_state(|state| {
-            state.conflict_state = None;
-        })?;
+    /// Continue an operation after resolving a conflict.
+    ///
+    /// Transitions from Conflict back to InProgress.
+    pub fn continue_operation(&self) -> Result<()> {
+        let mut state = self.load_state()?;
+        let (op, total) = match &state.phase {
+            OperationPhase::Conflict { op, .. } => (op.clone(), 0),
+            _ => return Ok(()),
+        };
+        let progress = OperationPhase::InProgress { op, step: 0, total };
+        state.phase = state.phase.transition(progress)?;
+        self.save_state(&state)?;
         Ok(())
+    }
+
+    /// Abort the current operation.
+    ///
+    /// Transitions to Aborted, then resets to Idle.
+    pub fn abort_operation(&self) -> Result<()> {
+        let mut state = self.load_state()?;
+        state.phase = state.phase.transition(OperationPhase::Aborted)?;
+        state.phase = state.phase.transition(OperationPhase::Idle)?;
+        self.save_state(&state)?;
+        Ok(())
+    }
+
+    /// Get the current operation phase.
+    pub fn current_phase(&self) -> Result<OperationPhase> {
+        Ok(self.load_state()?.phase)
+    }
+
+    /// Get the current operation, if any.
+    pub fn current_operation(&self) -> Result<Option<OngoingOperation>> {
+        Ok(self.load_state()?.phase.operation().cloned())
+    }
+
+    /// Clear conflict state (legacy alias for abort_operation).
+    pub fn clear_conflict(&self) -> Result<()> {
+        self.abort_operation()
+    }
+
+    /// Acquire a process-level lock for this repository.
+    ///
+    /// Returns an error if another process already holds the lock.
+    pub fn acquire_lock(&self) -> Result<RepoLock> {
+        RepoLock::acquire(self)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Process-level repository locking
+// ---------------------------------------------------------------------------
+
+/// A process-level lock on a Stack repository.
+///
+/// Prevents concurrent `gt` operations from corrupting shared metadata.
+/// The lock is automatically released when this struct is dropped.
+pub struct RepoLock {
+    lock: fslock::LockFile,
+}
+
+impl RepoLock {
+    /// Acquire the lock via a [`Storage`] instance.
+    pub fn acquire(storage: &Storage) -> Result<Self> {
+        Self::acquire_at(&storage.stack_dir)
+    }
+
+    /// Acquire the lock at a given stack directory path.
+    pub fn acquire_at(stack_dir: &Path) -> Result<Self> {
+        std::fs::create_dir_all(stack_dir)
+            .map_err(|e| Error::storage(format!("Failed to create stack directory: {e}")))?;
+
+        let path = stack_dir.join(".lock");
+        let mut lock = fslock::LockFile::open(&path)
+            .map_err(|e| Error::storage(format!("Failed to open lock file: {e}")))?;
+
+        if !lock.try_lock()
+            .map_err(|e| Error::storage(format!("Failed to acquire lock: {e}")))?
+        {
+            let pid = std::fs::read_to_string(&path).ok()
+                .and_then(|s| s.trim().parse::<u32>().ok());
+            let msg = match pid {
+                Some(p) => format!("Another operation is in progress (PID: {p})"),
+                None => "Another operation is in progress".to_string(),
+            };
+            return Err(Error::OperationInProgress(msg));
+        }
+
+        // Write our PID so other processes can report who holds the lock
+        let pid = std::process::id().to_string();
+        let _ = std::fs::write(&path, &pid);
+
+        Ok(Self { lock })
+    }
+}
+
+impl Drop for RepoLock {
+    fn drop(&mut self) {
+        let _ = self.lock.unlock();
     }
 }
 
@@ -464,7 +658,7 @@ mod tests {
         storage.start_operation(OngoingOperation::Restack {
             branches: vec!["a".to_string(), "b".to_string()],
             completed: vec![],
-        }).unwrap();
+        }, 2).unwrap();
 
         let op = storage.current_operation().unwrap();
         assert!(op.is_some());

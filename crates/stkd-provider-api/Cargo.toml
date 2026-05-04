@@ -7,6 +7,8 @@ repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
 description = "Provider API traits and types for Stkd - enables pluggable Git hosting provider support"
+readme.workspace = true
+authors.workspace = true
 
 [dependencies]
 # Async

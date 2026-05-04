@@ -2,6 +2,7 @@
 
 use anyhow::Result;
 use clap::Args;
+use stkd_core::storage::OperationPhase;
 use stkd_core::Repository;
 
 use crate::output;
@@ -14,9 +15,12 @@ pub async fn execute(_args: AbortArgs) -> Result<()> {
 
     let state = repo.storage().load_state()?;
 
-    if state.operation.is_none() && state.conflict_state.is_none() {
-        output::info("No operation in progress");
-        return Ok(());
+    match &state.phase {
+        OperationPhase::Idle | OperationPhase::Completed | OperationPhase::Aborted => {
+            output::info("No operation in progress");
+            return Ok(());
+        }
+        _ => {}
     }
 
     // Abort any git operation
@@ -24,9 +28,8 @@ pub async fn execute(_args: AbortArgs) -> Result<()> {
         .args(["rebase", "--abort"])
         .status();
 
-    // Clear state
-    repo.storage().clear_conflict()?;
-    repo.storage().complete_operation()?;
+    // Abort operation
+    repo.storage().abort_operation()?;
 
     output::success("Operation aborted");
 

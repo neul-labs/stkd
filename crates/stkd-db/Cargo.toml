@@ -7,6 +7,8 @@ repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
 description = "Database abstraction layer for Stkd - supports SQLite and PostgreSQL"
+readme.workspace = true
+authors.workspace = true
 
 [features]
 default = ["sqlite"]

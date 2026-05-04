@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 use clap::Args;
-use stkd_core::{rebase, Repository};
+use stkd_core::Repository;
 
 use crate::output;
 
@@ -21,101 +21,44 @@ pub struct RestackArgs {
     dry_run: bool,
 }
 
-pub async fn execute(args: RestackArgs) -> Result<()> {
+pub async fn execute(args: RestackArgs, json: bool) -> Result<()> {
     let repo = Repository::open(".")?;
 
-    let graph = repo.load_graph()?;
-
-    // Get branches to restack
-    let all_branches: Vec<String> = if args.current_only {
-        let current = repo.current_branch()?.ok_or_else(|| {
-            anyhow::anyhow!("Not on a branch")
-        })?;
-
-        let mut to_restack = vec![current.clone()];
-        to_restack.extend(
-            graph.descendants(&current).iter().map(|s| s.to_string())
-        );
-        to_restack
-    } else {
-        graph.topological_order().iter().map(|s| s.to_string()).collect()
+    let opts = stkd_engine::RestackOptions {
+        current_only: args.current_only,
+        force: args.force,
+        dry_run: args.dry_run,
     };
 
-    // Filter to branches that actually need restacking (unless --force)
-    let branches: Vec<String> = if args.force {
-        all_branches
+    let result = stkd_engine::restack(&repo, opts)?;
+
+    if json {
+        println!("{}", serde_json::to_string_pretty(&result)?);
     } else {
-        let needs_restack = graph.needs_restack(repo.git())?;
-        all_branches
-            .into_iter()
-            .filter(|b| needs_restack.contains(b))
-            .collect()
-    };
-
-    if branches.is_empty() {
-        output::success("All branches are up to date");
-        return Ok(());
-    }
-
-    // Dry run mode
-    if args.dry_run {
-        output::info("Dry run - showing what would be done:");
-        output::info("");
-
-        for branch in &branches {
-            let info = repo.storage().load_branch(branch)?;
-            if let Some(info) = info {
-                let onto = if graph.is_trunk(&info.parent) {
-                    repo.trunk().to_string()
-                } else {
-                    info.parent.clone()
-                };
-                output::info(&format!("  {} Rebase {} onto {}", output::ARROW, branch, onto));
-            }
-        }
-
-        output::info("");
-        output::hint("Run without --dry-run to execute");
-        return Ok(());
-    }
-
-    // Ensure clean working tree before rebasing
-    repo.ensure_clean()?;
-
-    let pb = output::progress_bar(branches.len() as u64, "Restacking");
-
-    for branch in &branches {
-        let info = repo.storage().load_branch(branch)?;
-        if let Some(info) = info {
-            let onto = if graph.is_trunk(&info.parent) {
-                repo.trunk().to_string()
-            } else {
-                info.parent.clone()
-            };
-
-            pb.set_message(format!("{} onto {}", branch, onto));
-
-            match rebase::rebase_branch(repo.git(), branch, &onto) {
-                Ok(rebase::RebaseResult::Success { .. }) => {
-                    pb.inc(1);
+        for entry in &result.restacked {
+            match entry.status {
+                stkd_engine::RestackStatus::Success => {
+                    output::success(&format!("Restacked {}", entry.branch));
                 }
-                Ok(rebase::RebaseResult::UpToDate { .. }) => {
-                    pb.inc(1);
+                stkd_engine::RestackStatus::UpToDate => {
+                    output::info(&format!("  {} {} is up to date", output::ARROW, entry.branch));
                 }
-                Ok(rebase::RebaseResult::Conflict { .. }) => {
-                    output::finish_progress_error(&pb, &format!("Conflict in {}", branch));
+                stkd_engine::RestackStatus::Conflict => {
+                    output::warn(&format!("Conflict restacking {} onto {}", entry.branch, entry.onto));
                     output::hint("Resolve conflicts and run 'gt continue'");
-                    return Ok(());
                 }
-                Err(e) => {
-                    output::finish_progress_error(&pb, &format!("Failed to restack {}", branch));
-                    return Err(e.into());
+                stkd_engine::RestackStatus::Error => {
+                    output::error(&format!("Failed to restack {}", entry.branch));
                 }
             }
         }
-    }
 
-    output::finish_progress(&pb, &format!("Restacked {} branches", branches.len()));
+        if result.restacked.is_empty() {
+            output::success("All branches are up to date");
+        } else if !result.restacked.iter().any(|e| e.status == stkd_engine::RestackStatus::Conflict || e.status == stkd_engine::RestackStatus::Error) {
+            output::success("Restack complete");
+        }
+    }
 
     Ok(())
 }

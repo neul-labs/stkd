@@ -1,0 +1,45 @@
+[package]
+name = "stkd-engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description = "Programmatic engine for Stack - exposes gt operations as reusable library functions"
+readme.workspace = true
+authors.workspace = true
+
+[dependencies]
+stkd-core = { path = "../stkd-core", version = "0.1.0" }
+stkd-provider-api = { path = "../stkd-provider-api", version = "0.1.0" }
+stkd-github = { path = "../stkd-github", version = "0.1.0" }
+stkd-gitlab = { path = "../stkd-gitlab", version = "0.1.0" }
+
+# Async
+tokio = { workspace = true }
+async-trait = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Git
+git2 = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+
+# Time
+chrono = { workspace = true }
+
+# Utilities
+url = { workspace = true }
+dirs = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

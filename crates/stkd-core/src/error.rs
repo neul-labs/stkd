@@ -61,6 +61,10 @@ pub enum Error {
     #[error("No operation in progress")]
     NoOperationInProgress,
 
+    /// Invalid state transition
+    #[error("Invalid state transition from '{from}' to '{to}'")]
+    InvalidStateTransition { from: String, to: String },
+
     /// Invalid branch name
     #[error("Invalid branch name: {0}")]
     InvalidBranchName(String),

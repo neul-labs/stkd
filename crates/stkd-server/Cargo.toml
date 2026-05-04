@@ -7,6 +7,8 @@ repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
 description = "Web API server for Stkd dashboard - provides REST API and WebSocket support"
+readme.workspace = true
+authors.workspace = true
 
 [[bin]]
 name = "stkd-server"

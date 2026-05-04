@@ -116,7 +116,9 @@ git add . && git commit -m "Add new feature"
 
 # Now restack feature/b onto feature/new
 git checkout feature/b
-gt rebase --onto feature/new
+# Update parent tracking, then restack
+gt track --parent feature/new
+gt restack
 ```
 
 ## Multiple Independent Stacks
@@ -186,8 +188,10 @@ git branch -D feature/top
 git branch -D feature/middle
 git branch -D feature/base
 
-# Or use Stack's cleanup
-gt cleanup --abandoned
+# Or untrack them from Stack
+gt untrack feature/top
+gt untrack feature/middle
+gt untrack feature/base
 ```
 
 ## Emergency Hotfix

@@ -141,7 +141,8 @@ Change a branch's parent:
 
 ```bash
 # Move current branch onto a new parent
-gt rebase --onto new-parent
+gt track --parent new-parent
+gt restack
 ```
 
 Before:
@@ -171,7 +172,8 @@ gt create B
 
 # Move C onto B
 git checkout C
-gt rebase --onto B
+gt track --parent B
+gt restack
 
 # Now: main → A → B → C
 ```

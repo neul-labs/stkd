@@ -7,6 +7,8 @@ repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
 description = "Core library for Stkd - stacked diffs for Git"
+readme.workspace = true
+authors.workspace = true
 
 [dependencies]
 # Serialization
@@ -30,6 +32,7 @@ chrono = { workspace = true }
 # Utilities
 uuid = { workspace = true }
 regex = { workspace = true }
+fslock = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

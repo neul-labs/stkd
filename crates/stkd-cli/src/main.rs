@@ -9,7 +9,6 @@ use tracing_subscriber::EnvFilter;
 
 mod commands;
 mod output;
-mod provider_context;
 
 use commands::*;
 
@@ -26,6 +25,10 @@ struct Cli {
     /// Suppress non-essential output
     #[arg(long, short, global = true)]
     quiet: bool,
+
+    /// Output results as JSON
+    #[arg(long, global = true)]
+    json: bool,
 
     #[command(subcommand)]
     command: Commands,
@@ -156,6 +159,9 @@ enum Commands {
         #[arg(value_enum)]
         shell: Shell,
     },
+
+    /// Install Claude Code skill for Stack
+    InstallSkill(install_skill::InstallSkillArgs),
 }
 
 #[tokio::main]
@@ -176,15 +182,49 @@ async fn main() -> Result<()> {
         .init();
 
     // Set output mode
-    output::set_quiet(cli.quiet);
+    output::set_mode(if cli.json {
+        output::OutputMode::Json
+    } else if cli.quiet {
+        output::OutputMode::Quiet
+    } else {
+        output::OutputMode::Human
+    });
+
+    // Acquire repo lock for commands that mutate shared state
+    let _repo_lock = match &cli.command {
+        Commands::Completions { .. } | Commands::InstallSkill(..) | Commands::Init(..) => None,
+        _ => match git2::Repository::discover(".") {
+            Ok(git) => {
+                let stack_dir = git.path().join("stkd");
+                match stkd_core::RepoLock::acquire_at(&stack_dir) {
+                    Ok(lock) => Some(lock),
+                    Err(e) => {
+                        if cli.json {
+                            let error_json = serde_json::json!({
+                                "error": format!("{:#}", e),
+                            });
+                            eprintln!("{}", serde_json::to_string_pretty(&error_json).unwrap_or_default());
+                        } else {
+                            output::error(&format!("{:#}", e));
+                            if let Some(hint) = e.hint() {
+                                output::hint(hint);
+                            }
+                        }
+                        std::process::exit(1);
+                    }
+                }
+            }
+            Err(_) => None,
+        },
+    };
 
     // Execute command
     let result = match cli.command {
         // Initialization
-        Commands::Init(args) => init::execute(args).await,
+        Commands::Init(args) => init::execute(args, cli.json).await,
 
         // Branch Management
-        Commands::Create(args) => create::execute(args).await,
+        Commands::Create(args) => create::execute(args, cli.json).await,
         Commands::Rename(args) => rename::execute(args).await,
         Commands::Delete(args) => delete::execute(args).await,
         Commands::Track(args) => track::execute(args).await,
@@ -198,11 +238,11 @@ async fn main() -> Result<()> {
         Commands::Checkout(args) => checkout::execute(args).await,
 
         // Stack Operations
-        Commands::Log(args) => log::execute(args, false).await,
-        Commands::Ls(args) => log::execute(args, true).await,
+        Commands::Log(args) => log::execute(args, false, cli.json).await,
+        Commands::Ls(args) => log::execute(args, true, cli.json).await,
         Commands::Ll(args) => log::execute_long(args).await,
-        Commands::Info(args) => info::execute(args).await,
-        Commands::Status(args) => status::execute(args).await,
+        Commands::Info(args) => info::execute(args, cli.json).await,
+        Commands::Status(args) => status::execute(args, cli.json).await,
 
         // Editing
         Commands::Modify(args) => modify::execute(args).await,
@@ -211,10 +251,10 @@ async fn main() -> Result<()> {
         Commands::Split(args) => split::execute(args).await,
 
         // Synchronization
-        Commands::Sync(args) => sync::execute(args).await,
-        Commands::Restack(args) => restack::execute(args).await,
-        Commands::Submit(args) => submit::execute(args).await,
-        Commands::Land(args) => land::execute(args).await,
+        Commands::Sync(args) => sync::execute(args, cli.json).await,
+        Commands::Restack(args) => restack::execute(args, cli.json).await,
+        Commands::Submit(args) => submit::execute(args, cli.json).await,
+        Commands::Land(args) => land::execute(args, cli.json).await,
 
         // Conflict Resolution
         Commands::Continue(args) => continue_cmd::execute(args).await,
@@ -233,16 +273,26 @@ async fn main() -> Result<()> {
             let mut cmd = Cli::command();
             completions::execute(completions::CompletionsArgs { shell }, &mut cmd)
         }
+
+        // Install Skill
+        Commands::InstallSkill(args) => install_skill::execute(args).await,
     };
 
     if let Err(e) = result {
-        // Display the error
-        output::error(&format!("{:#}", e));
+        if cli.json {
+            let error_json = serde_json::json!({
+                "error": format!("{:#}", e),
+            });
+            eprintln!("{}", serde_json::to_string_pretty(&error_json).unwrap_or_default());
+        } else {
+            // Display the error
+            output::error(&format!("{:#}", e));
 
-        // Check if this is a Stack error with a hint
-        if let Some(stack_err) = e.downcast_ref::<stkd_core::Error>() {
-            if let Some(hint) = stack_err.hint() {
-                output::hint(hint);
+            // Check if this is a Stack error with a hint
+            if let Some(stack_err) = e.downcast_ref::<stkd_core::Error>() {
+                if let Some(hint) = stack_err.hint() {
+                    output::hint(hint);
+                }
             }
         }
 

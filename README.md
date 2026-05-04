@@ -27,6 +27,15 @@ When you update a branch, Stack automatically rebases all dependent branches. Wh
 # Quick install (downloads binary or builds from source)
 curl -fsSL https://raw.githubusercontent.com/neul-labs/stkd/main/install.sh | bash
 
+# Or install from crates.io
+cargo install stkd-cli
+
+# Or via npm
+npm install -g stkd-cli
+
+# Or via pip
+pip install stkd-cli
+
 # Or build from source
 cargo install --path crates/stkd-cli
 ```
@@ -40,7 +49,7 @@ The binary is named `gt` for Graphite compatibility.
 gt init
 
 # Authenticate with GitHub or GitLab
-gt auth login
+gt auth --github
 
 # Create a stack of branches
 gt create feature/step-1    # First branch on main
@@ -105,6 +114,8 @@ Full documentation at **[docs.neullabs.com/stkd](https://docs.neullabs.com/stkd)
 crates/
 ├── stkd-cli          # CLI binary (gt)
 ├── stkd-core         # Core library (Repository, Stack, DAG)
+├── stkd-engine       # Programmatic engine for multi-agent harnesses
+├── stkd-mcp          # MCP server for AI agent integration
 ├── stkd-provider-api # Provider trait definitions
 ├── stkd-github       # GitHub implementation
 ├── stkd-gitlab       # GitLab implementation

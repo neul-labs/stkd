@@ -2,6 +2,7 @@
 
 use anyhow::Result;
 use clap::Args;
+use serde::Serialize;
 use stkd_core::Repository;
 
 use crate::output;
@@ -12,7 +13,19 @@ pub struct InfoArgs {
     branch: Option<String>,
 }
 
-pub async fn execute(args: InfoArgs) -> Result<()> {
+#[derive(Serialize)]
+struct InfoJson {
+    branch: String,
+    parent: String,
+    status: String,
+    children: Vec<String>,
+    mr_number: Option<u64>,
+    mr_url: Option<String>,
+    created_at: String,
+    updated_at: String,
+}
+
+pub async fn execute(args: InfoArgs, json: bool) -> Result<()> {
     let repo = Repository::open(".")?;
 
     let branch = args.branch.or_else(|| repo.current_branch().ok().flatten())
@@ -21,23 +34,37 @@ pub async fn execute(args: InfoArgs) -> Result<()> {
     let info = repo.storage().load_branch(&branch)?
         .ok_or_else(|| anyhow::anyhow!("Branch '{}' is not tracked", branch))?;
 
-    println!("Branch: {}", output::branch(&info.name, true));
-    println!("Parent: {}", info.parent);
-    println!("Status: {}", info.status);
+    if json {
+        let info_json = InfoJson {
+            branch: info.name.clone(),
+            parent: info.parent.clone(),
+            status: format!("{:?}", info.status),
+            children: info.children.clone(),
+            mr_number: info.merge_request_id,
+            mr_url: info.merge_request_url.clone(),
+            created_at: info.created_at.format("%Y-%m-%d %H:%M").to_string(),
+            updated_at: info.updated_at.format("%Y-%m-%d %H:%M").to_string(),
+        };
+        println!("{}", serde_json::to_string_pretty(&info_json)?);
+    } else {
+        println!("Branch: {}", output::branch(&info.name, true));
+        println!("Parent: {}", info.parent);
+        println!("Status: {}", info.status);
 
-    if !info.children.is_empty() {
-        println!("Children: {}", info.children.join(", "));
-    }
-
-    if let Some(pr) = info.merge_request_id {
-        println!("PR: #{}", pr);
-        if let Some(ref url) = info.merge_request_url {
-            println!("URL: {}", url);
+        if !info.children.is_empty() {
+            println!("Children: {}", info.children.join(", "));
         }
-    }
 
-    println!("Created: {}", info.created_at.format("%Y-%m-%d %H:%M"));
-    println!("Updated: {}", info.updated_at.format("%Y-%m-%d %H:%M"));
+        if let Some(pr) = info.merge_request_id {
+            println!("PR: #{}", pr);
+            if let Some(ref url) = info.merge_request_url {
+                println!("URL: {}", url);
+            }
+        }
+
+        println!("Created: {}", info.created_at.format("%Y-%m-%d %H:%M"));
+        println!("Updated: {}", info.updated_at.format("%Y-%m-%d %H:%M"));
+    }
 
     Ok(())
 }

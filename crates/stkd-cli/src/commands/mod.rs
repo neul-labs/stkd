@@ -26,3 +26,4 @@ pub mod split;
 pub mod completions;
 pub mod undo;
 pub mod redo;
+pub mod install_skill;

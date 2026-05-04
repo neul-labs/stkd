@@ -41,7 +41,7 @@ pub use config::{StackConfig, SubmitConfig};
 pub use branch::{Branch, BranchInfo, BranchStatus};
 pub use stack::{Stack, StackEntry};
 pub use dag::BranchGraph;
-pub use storage::Storage;
+pub use storage::{Storage, RepoLock};
 pub use repository::Repository;
 pub use history::{History, HistoryEntry};
 pub use template::{StackTemplate, TemplateStore};

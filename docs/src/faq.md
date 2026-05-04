@@ -154,7 +154,8 @@ gt create feature-b/base
 Yes:
 
 ```bash
-gt rebase --onto new-parent
+gt track --parent new-parent
+gt restack
 ```
 
 ### Can I split a branch into multiple?

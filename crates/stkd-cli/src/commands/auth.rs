@@ -6,7 +6,6 @@ use stkd_github::{auth as github_auth, DeviceFlow, GitHubClient};
 use stkd_gitlab::auth as gitlab_auth;
 
 use crate::output;
-use crate::provider_context::{detect_provider_type, ProviderType};
 
 #[derive(Args)]
 pub struct AuthArgs {
@@ -46,20 +45,20 @@ pub struct AuthArgs {
 pub async fn execute(args: AuthArgs) -> Result<()> {
     // Determine which provider to use
     let provider = if args.github {
-        ProviderType::GitHub
+        stkd_engine::ProviderType::GitHub
     } else if args.gitlab {
-        ProviderType::GitLab
+        stkd_engine::ProviderType::GitLab
     } else {
         // Try to auto-detect from current repo
         match stkd_core::Repository::open(".") {
-            Ok(repo) => detect_provider_type(&repo).unwrap_or(ProviderType::GitHub),
-            Err(_) => ProviderType::GitHub, // Default to GitHub if not in a repo
+            Ok(repo) => stkd_engine::detect_provider_type(&repo).unwrap_or(stkd_engine::ProviderType::GitHub),
+            Err(_) => stkd_engine::ProviderType::GitHub, // Default to GitHub if not in a repo
         }
     };
 
     match provider {
-        ProviderType::GitHub => execute_github(args).await,
-        ProviderType::GitLab => execute_gitlab(args).await,
+        stkd_engine::ProviderType::GitHub => execute_github(args).await,
+        stkd_engine::ProviderType::GitLab => execute_gitlab(args).await,
     }
 }
 

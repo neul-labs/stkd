@@ -6,7 +6,7 @@ use git2::{BranchType, Repository as GitRepo};
 use tracing::{debug, info, warn};
 
 use crate::dag::BranchGraph;
-use crate::storage::{ConflictState, Storage};
+use crate::storage::{ConflictState, OperationPhase, Storage};
 use crate::{Error, Result};
 
 /// Result of a rebase operation
@@ -198,9 +198,10 @@ pub fn restack_all(
 pub fn continue_rebase(repo: &GitRepo, storage: &Storage) -> Result<()> {
     let state = storage.load_state()?;
 
-    let conflict = state
-        .conflict_state
-        .ok_or(Error::NoOperationInProgress)?;
+    let conflict = match &state.phase {
+        OperationPhase::Conflict { conflict, .. } => conflict.clone(),
+        _ => return Err(Error::NoOperationInProgress),
+    };
 
     // Check if index is clean (conflicts resolved)
     let index = repo.index()?;
@@ -212,7 +213,7 @@ pub fn continue_rebase(repo: &GitRepo, storage: &Storage) -> Result<()> {
     // Note: In a full implementation, we'd need to handle the git2 rebase state
     // For now, we'll use a simpler approach
 
-    storage.clear_conflict()?;
+    storage.continue_operation()?;
 
     // Continue with remaining branches
     // This would be called by the CLI to continue restacking
@@ -224,16 +225,16 @@ pub fn continue_rebase(repo: &GitRepo, storage: &Storage) -> Result<()> {
 pub fn abort_rebase(repo: &GitRepo, storage: &Storage) -> Result<()> {
     let state = storage.load_state()?;
 
-    let _conflict = state
-        .conflict_state
-        .ok_or(Error::NoOperationInProgress)?;
+    match &state.phase {
+        OperationPhase::Conflict { .. } | OperationPhase::InProgress { .. } => {}
+        _ => return Err(Error::NoOperationInProgress),
+    }
 
     // Abort the rebase
     // Reset to original state
     repo.cleanup_state()?;
 
-    storage.clear_conflict()?;
-    storage.complete_operation()?;
+    storage.abort_operation()?;
 
     Ok(())
 }

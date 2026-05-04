@@ -1,0 +1,44 @@
+{
+  "name": "stkd-cli",
+  "version": "0.1.0",
+  "description": "Stack CLI - Stacked diffs for Git (gt binary)",
+  "main": "index.js",
+  "bin": {
+    "gt": "./bin/gt"
+  },
+  "scripts": {
+    "postinstall": "node install.js",
+    "preuninstall": "node uninstall.js"
+  },
+  "files": [
+    "bin/",
+    "install.js",
+    "uninstall.js",
+    "index.js",
+    "package.json",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/neul-labs/stkd.git"
+  },
+  "keywords": [
+    "git",
+    "stack",
+    "stacked-diffs",
+    "pull-requests",
+    "github",
+    "gitlab",
+    "cli",
+    "graphite"
+  ],
+  "author": "Neul Labs <hello@neullabs.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/neul-labs/stkd/issues"
+  },
+  "homepage": "https://docs.neullabs.com/stkd",
+  "engines": {
+    "node": ">=16"
+  }
+}

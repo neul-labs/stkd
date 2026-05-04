@@ -7,13 +7,15 @@ This page details the structure and contents of each crate in the Stack workspac
 ```
 Cargo.toml           # Workspace definition
 crates/
-├── stkd-core/      # Core library: Repository, Stack, DAG
+├── stkd-core/       # Core library: Repository, Stack, DAG
 ├── stkd-provider-api/  # Provider trait definitions
-├── stkd-github/    # GitHub implementation
-├── stkd-gitlab/    # GitLab implementation
-├── stkd-db/        # Database abstraction (SQLite/PostgreSQL)
-├── stkd-server/    # Web dashboard API server
-└── stkd-cli/       # CLI application (gt binary)
+├── stkd-github/     # GitHub implementation
+├── stkd-gitlab/     # GitLab implementation
+├── stkd-engine/     # Programmatic engine: reusable library functions
+├── stkd-mcp/        # MCP server for AI agent integration
+├── stkd-db/         # Database abstraction (SQLite/PostgreSQL)
+├── stkd-server/     # Web dashboard API server
+└── stkd-cli/        # CLI application (gt binary)
 
 web/                 # Vue 3 + TailwindCSS frontend
 ```
@@ -235,6 +237,66 @@ POST   /api/webhooks/github             # GitHub events
 POST   /api/webhooks/gitlab             # GitLab events
 ```
 
+## stkd-engine
+
+Programmatic engine exposing all `gt` operations as reusable async functions.
+
+```
+stkd-engine/
+├── Cargo.toml
+└── src/
+    ├── lib.rs              # Public API
+    ├── init.rs             # Repository initialization
+    ├── submit.rs           # MR/PR submission
+    ├── sync.rs             # Remote sync and restack
+    ├── land.rs             # Merge and cleanup
+    ├── restack.rs          # Rebase operations
+    ├── retry.rs            # Provider retry with backoff
+    └── provider.rs         # Provider auto-detection
+```
+
+### Key Functions
+
+```rust
+pub async fn submit(
+    repo: &Repository,
+    opts: SubmitOptions,
+    provider: &dyn Provider,
+    repo_id: &RepoId,
+) -> Result<SubmitResult>;
+
+pub async fn sync(
+    repo: &Repository,
+    opts: SyncOptions,
+    provider: Option<&dyn Provider>,
+    repo_id: Option<&RepoId>,
+) -> Result<SyncResult>;
+```
+
+## stkd-mcp
+
+MCP server exposing Stack operations as Model Context Protocol tools.
+
+```
+stkd-mcp/
+├── Cargo.toml
+└── src/
+    └── main.rs             # stdio MCP server
+```
+
+### Available Tools
+
+- `gt_init` — Initialize Stack in a repository
+- `gt_create` — Create a new stacked branch
+- `gt_log` — Show the current stack
+- `gt_status` — Show branch and MR status
+- `gt_submit` — Submit PRs/MRs
+- `gt_sync` — Sync with remote
+- `gt_land` — Merge the stack
+- `gt_restack` — Restack branches
+- `gt_track` — Track an existing branch
+- `gt_delete` — Delete a tracked branch
+
 ## stkd-cli
 
 Command-line interface.
@@ -274,13 +336,22 @@ stkd-cli/
         │                    │                    │
         ▼                    ▼                    ▼
 ┌───────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│  stkd-core   │  │  stkd-github   │  │  stkd-gitlab   │
+│  stkd-core   │  │  stkd-engine   │  │  stkd-mcp      │
 └───────────────┘  └────────┬────────┘  └────────┬────────┘
-                            │                    │
-                            ▼                    ▼
-                    ┌─────────────────────────────┐
-                    │    stkd-provider-api       │
-                    └─────────────────────────────┘
+        ▲                   │                    │
+        │                   ▼                    │
+        │         ┌─────────────────┐            │
+        │         │  stkd-github   │            │
+        │         └────────┬────────┘            │
+        │                  │                     │
+        │         ┌────────┴────────┐            │
+        │         │  stkd-gitlab   │            │
+        │         └────────┬────────┘            │
+        │                  │                     │
+        │                  ▼                     │
+        │         ┌─────────────────┐            │
+        └─────────┤ stkd-provider-api │◄───────────┘
+                  └─────────────────┘
 
                     ┌──────────────────┐
                     │   stkd-server   │
