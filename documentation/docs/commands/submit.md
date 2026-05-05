@@ -1,11 +1,13 @@
 # gt submit
 
-Create or update pull requests for the stack.
+Push branches to remote and create or update pull requests.
+
+Submit is how you share your work. It creates PRs for each branch in your stack, sets the correct base branches, and adds stack context to PR descriptions.
 
 ## Usage
 
 ```bash
-gt submit [OPTIONS]
+gt submit [OPTIONS] [BRANCHES...]
 ```
 
 ## Options
@@ -13,11 +15,19 @@ gt submit [OPTIONS]
 | Option | Description |
 |--------|-------------|
 | `--dry-run` | Show what would happen without making changes |
-| `--only <branch>` | Only submit specific branch |
-| `--from <branch>` | Submit from branch to tip |
-| `--to <branch>` | Submit from root to branch |
+| `--only <branch>` | Submit only a specific branch |
+| `--from <branch>` | Submit from this branch to the tip of the stack |
+| `--to <branch>` | Submit from the bottom of the stack to this branch |
+| `--stack <name>` | Submit a specific named stack |
 | `--draft` | Create PRs as drafts |
-| `--no-draft` | Create PRs as ready for review |
+| `--ready` | Mark existing draft PRs as ready |
+| `--reviewers <users>` | Comma-separated list of reviewers |
+| `--labels <labels>` | Comma-separated list of labels |
+| `--milestone <name>` | Milestone to assign |
+| `--template <name>` | PR template to use |
+| `--no-fetch` | Skip fetching PR status after submitting |
+| `--update-only` | Update existing PRs without creating new ones |
+| `--force` | Force push even if remote has diverged |
 
 ## Examples
 
@@ -27,64 +37,324 @@ gt submit [OPTIONS]
 gt submit
 ```
 
+Pushes all branches in the current stack and creates/updates PRs for each.
+
 ### Preview First
 
 ```bash
 gt submit --dry-run
 ```
 
-### Submit Partial Stack
+Output:
 
-Only the current branch:
-
-```bash
-gt submit --only feature/my-branch
+```
+Would submit:
+  feature/auth-models → main (create PR)
+  feature/auth-api → feature/auth-models (create PR)
+  feature/auth-ui → feature/auth-api (create PR)
 ```
 
-From a specific branch to tip:
+### Submit a Single Branch
 
 ```bash
-gt submit --from feature/step-2
+gt submit --only feature/auth-api
 ```
 
-From root to a specific branch:
+Only submits `feature/auth-api`. Branches above and below it are untouched.
+
+### Submit a Range
 
 ```bash
-gt submit --to feature/step-2
+# Submit from feature/auth-models to the top
+gt submit --from feature/auth-models
+
+# Submit up to feature/auth-api (inclusive)
+gt submit --to feature/auth-api
+
+# Submit just the middle branch
+gt submit --only feature/auth-api
 ```
 
-### Draft PRs
+### Submit as Draft
 
 ```bash
+# Submit entire stack as draft
 gt submit --draft
+
+# Submit specific branch as draft
+gt submit --only feature/auth-api --draft
+```
+
+Draft PRs are visible but signal that they're not ready for final review.
+
+### Mark as Ready
+
+```bash
+# Convert all draft PRs in the stack to ready
+gt submit --ready
+
+# Convert a specific branch
+gt submit --only feature/auth-api --ready
+```
+
+### Assign Reviewers
+
+```bash
+# Assign reviewers to all submitted PRs
+gt submit --reviewers alice,bob
+
+# Per-branch reviewers (via config)
+gt config submit.default-reviewers "alice,bob,charlie"
+```
+
+### Add Labels
+
+```bash
+# Add labels to all submitted PRs
+gt submit --labels "enhancement,needs-review"
+
+# Auto-size labels (configured in .stkd/config.toml)
+# Results in labels like size/M for a 150-line PR
+```
+
+### Use a PR Template
+
+```bash
+# Use a specific template from .github/PULL_REQUEST_TEMPLATE/
+gt submit --template "api-changes"
+```
+
+Stack reads templates from:
+- `.github/PULL_REQUEST_TEMPLATE.md`
+- `.github/PULL_REQUEST_TEMPLATE/*.md`
+- `.gitlab/merge_request_templates/*.md`
+
+### Update Existing PRs
+
+```bash
+# Update PR metadata without changing diff
+gt submit --update-only --labels "urgent"
+
+# Update reviewers on existing PRs
+gt submit --update-only --reviewers charlie
+```
+
+This is useful when you want to change PR metadata (labels, reviewers, milestone) without amending commits.
+
+### Submit a Specific Stack
+
+```bash
+# If you have multiple stacks, submit just one
+gt submit --stack feature/auth-models
 ```
 
 ## Behavior
 
-1. Pushes each branch to remote
-2. Creates PRs for branches without existing PRs
-3. Updates PRs for branches that already have PRs
-4. Sets correct base branches for stacked PRs
-5. Adds stack visualization to PR descriptions
+### Step-by-Step
 
-## PR Descriptions
+```
+1. VALIDATE
+   - Check that stack has no conflicts
+   - Ensure current branch is tracked by Stack
 
-Stack automatically adds a visualization to PR descriptions:
+2. RESTACK (if needed)
+   - If parents are out of date, restack first
+   - This ensures correct diffs on PRs
 
-```markdown
-## Stack
+3. PUSH
+   - For each branch in topological order:
+     git push --force-with-lease origin <branch>
 
-- #123 Add user models ✅
-- #124 Add authentication API ← this PR
-- #125 Add login UI
+4. CREATE / UPDATE PRs
+   - For branches without PRs: create new PR
+   - For branches with PRs: update existing PR
+   - Set correct base branch (parent branch)
+
+5. UPDATE DESCRIPTIONS
+   - Add stack visualization to each PR description
+   - Include parent/child PR links
+
+6. FETCH STATUS (unless --no-fetch)
+   - Query provider for PR numbers, states
+   - Update local metadata
 ```
 
-## Force Push
+### PR Descriptions
 
-Stack uses force-push (`--force-with-lease`) when necessary to update branches after rebasing. This is safe as long as you're the only one working on the branch.
+Stack automatically adds a stack visualization to each PR description:
+
+```markdown
+# Description
+<Auto-generated from commit message>
+
+---
+
+## Stack Information
+- **Position**: 2 of 4 in stack
+- **Parent PR**: #42 (feature/auth-models)
+- **Child PR**: #44 (feature/auth-ui)
+
+## Stack
+- #42 `feature/auth-models` ← parent
+- #43 `feature/auth-api` ← **this PR**
+- #44 `feature/auth-ui` ← child
+```
+
+This helps reviewers understand where each PR fits in the stack.
+
+### Base Branch Management
+
+When you submit:
+
+```
+main
+ └── feature/auth-models      PR #1, base: main
+      └── feature/auth-api    PR #2, base: feature/auth-models
+           └── feature/auth-ui PR #3, base: feature/auth-api
+```
+
+Stack creates:
+- PR #1 targeting `main`
+- PR #2 targeting `feature/auth-models`
+- PR #3 targeting `feature/auth-api`
+
+### After Landing a Parent
+
+```bash
+# Land PR #1
+gt land feature/auth-models
+
+# Stack automatically updates PR #2's base to main
+gt sync
+gt submit  # PR #2 now targets main
+```
+
+## Partial Submit Strategies
+
+### Submit Bottom-Up
+
+The most common approach — submit lower PRs first since they're typically more stable:
+
+```bash
+# Submit just the bottom 2 branches
+gt submit --to feature/auth-api
+
+# Later, submit the rest
+gt submit --from feature/auth-ui
+```
+
+### Submit as You Go
+
+Create and submit branches incrementally:
+
+```bash
+gt create feature/step-1
+git add .
+gt modify
+gt submit --only feature/step-1
+
+# Work on next branch
+gt create feature/step-2
+# ...
+gt submit --only feature/step-2
+```
+
+This gets PRs open for review as early as possible.
+
+### Draft Stack, Ready Bottom
+
+```bash
+# Submit full stack as draft
+gt submit --draft
+
+# As each PR gets approved, mark it ready
+gt submit --only feature/step-1 --ready
+# Wait for approval...
+gt land feature/step-1
+gt submit --only feature/step-2 --ready
+```
+
+## Force Push Safety
+
+Stack uses `--force-with-lease` for pushes:
+
+```bash
+git push --force-with-lease origin feature/auth-api
+```
+
+This fails if someone else pushed to the branch since you last fetched. If this happens:
+
+```bash
+# Fetch their changes first
+gt sync
+
+# Resolve if needed, then resubmit
+gt submit
+```
+
+!!! warning "Never Use --force"
+    Stack does not support `--force` for submit (it always uses `--force-with-lease`). If you need to overwrite remote history, use `git push --force` manually, but be aware that you may lose others' work.
+
+## Tips for Effective Submits
+
+1. **Submit early, submit often**: Get PRs open before they're perfect
+2. **Use drafts for WIP**: Don't mark PRs ready until they're actually ready
+3. **Assign reviewers immediately**: Saves the "who should review this?" step
+4. **Label by size**: Helps reviewers prioritize small PRs
+5. **Write clear commit messages**: They become PR descriptions
+6. **Check the stack description**: Review what Stack generated before submitting
+7. **Submit from bottom up**: The bottom PRs are typically ready first
+8. **Use `--dry-run` to preview**: See what Stack would do without doing it
+
+## Troubleshooting Submits
+
+### "Base branch does not exist"
+
+The parent branch hasn't been pushed to remote:
+
+```bash
+# Push parent first
+gt submit --to feature/parent
+# Then submit the rest
+gt submit
+```
+
+### "PR already exists for this branch"
+
+Stack detects existing PRs and updates them. If it fails:
+
+```bash
+# Force update metadata
+gt submit --force
+```
+
+### "Cannot submit, stack has conflicts"
+
+Restack first, then submit:
+
+```bash
+gt restack
+gt submit
+```
+
+### "Remote branch has diverged"
+
+Someone else pushed to the branch:
+
+```bash
+# Fetch their changes
+gt sync
+
+# Review what changed
+git log HEAD..origin/feature/branch --oneline
+
+# If safe, resubmit
+gt submit
+```
 
 ## Related Commands
 
 - [`gt sync`](sync.md) - Sync with remote
 - [`gt land`](land.md) - Merge PRs
 - [`gt restack`](restack.md) - Rebase branches
+- [`gt modify`](modify.md) - Amend commits

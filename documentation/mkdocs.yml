@@ -68,6 +68,8 @@ nav:
     - Quick Start: getting-started/quickstart.md
     - First Stack: getting-started/first-stack.md
     - Authentication: getting-started/authentication.md
+  - Concepts:
+    - How Stacked Diffs Work: concepts/stacked-diffs.md
   - Commands:
     - Overview: commands/index.md
     - Stack Management:
@@ -96,6 +98,18 @@ nav:
       - auth: commands/auth.md
   - Guides:
     - Workflow Patterns: guides/workflows.md
+    - Interactive TUI: guides/tui.md
+    - Restacking Deep Dive: guides/restacking.md
+    - Branch Management: guides/branch-management.md
+    - Advanced Submit: guides/advanced-submit.md
+    - Stack Templates: guides/templates.md
+    - Performance & Large Repos: guides/performance.md
+    - Day in the Life: guides/day-in-the-life.md
+    - Web Dashboard: guides/dashboard.md
+    - MCP Server: guides/mcp.md
+    - Open Source Maintainers: guides/open-source.md
+    - Migrating from Graphite: guides/migration-graphite.md
+    - Migrating from Git: guides/migration-git.md
     - Working with Teams: guides/teams.md
     - CI/CD Integration: guides/ci-cd.md
     - Resolving Conflicts: guides/conflicts.md

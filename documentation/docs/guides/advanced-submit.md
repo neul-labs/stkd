@@ -1,0 +1,397 @@
+# Advanced Submit Strategies
+
+Submitting is more than just pushing branches. This guide covers partial submits, reviewer assignment, PR templates, draft PRs, and strategies for managing complex submission scenarios.
+
+---
+
+## Partial Submits
+
+By default, `gt submit` pushes all unsubmitted branches in your current stack. Sometimes you only want to submit a subset.
+
+### Submitting a Range
+
+```bash
+# Submit from a specific branch to the top of the stack
+gt submit --from feature/auth-models
+
+# Submit up to a specific branch
+gt submit --to feature/auth-api
+
+# Submit only a single branch
+gt submit --only feature/auth-models
+```
+
+### Use Cases
+
+**Submit bottom PRs first:**
+```bash
+# You have a 5-branch stack. The bottom 2 are ready for review,
+# the top 3 are still WIP.
+gt submit --to feature/auth-api
+# Only submits feature/auth-models and feature/auth-api
+```
+
+**Submit a middle branch:**
+```bash
+# You want feedback on a specific branch without submitting everything above it
+gt submit --only feature/auth-api
+```
+
+**Submit current branch and descendants:**
+```bash
+# You're on feature/auth-ui, submit it and everything below that isn't submitted
+gt submit --from feature/auth-ui
+```
+
+---
+
+## Reviewer Assignment
+
+Assigning reviewers at submit time saves a step.
+
+### Assign Individual Reviewers
+
+```bash
+# Assign reviewers when submitting
+gt submit --reviewers alice,bob
+
+# Per-branch reviewers (via config)
+gt config submit.default-reviewers "alice,bob,charlie"
+```
+
+### Code Owners Integration
+
+Stack respects `.github/CODEOWNERS` and `.gitlab/CODEOWNERS`:
+
+```bash
+# If CODEOWNERS assigns @frontend to src/ui/, Stack will
+# suggest or auto-assign those reviewers when submitting
+# branches that touch those files.
+gt submit --auto-reviewers
+```
+
+### Reviewer Rotation
+
+For teams with round-robin review:
+
+```bash
+# Configured in .stkd/config.toml
+[submit]
+reviewer-rotation = ["alice", "bob", "charlie"]
+
+# Stack assigns the next reviewer in rotation
+gt submit --rotate-reviewers
+```
+
+---
+
+## Labels and Milestones
+
+Organize PRs with labels and milestones at submit time.
+
+### Adding Labels
+
+```bash
+# Add labels to all submitted PRs
+gt submit --labels "enhancement,needs-review"
+
+# Add different labels per PR
+gt submit --label feature/auth-models="foundation" --label feature/auth-api="api"
+
+# Default labels in config
+gt config submit.default-labels "stacked-pr"
+```
+
+### Milestones
+
+```bash
+# Assign a milestone
+gt submit --milestone "Sprint 12"
+
+# Or set a default
+gt config submit.default-milestone "Current Sprint"
+```
+
+### PR Size Labels
+
+Stack can auto-label PRs based on size:
+
+```bash
+# Config in .stkd/config.toml
+[submit]
+auto-size-labels = true
+
+# Results in labels:
+# - size/XS (< 50 lines)
+# - size/S (50-100 lines)
+# - size/M (100-250 lines)
+# - size/L (250-500 lines)
+# - size/XL (> 500 lines)
+```
+
+---
+
+## Draft PRs
+
+Submit work-in-progress PRs to get early feedback without signaling they're ready to merge.
+
+### Submit as Draft
+
+```bash
+# Submit entire stack as draft
+gt submit --draft
+
+# Submit specific branch as draft
+gt submit --only feature/auth-api --draft
+```
+
+### Convert Draft to Ready
+
+```bash
+# Mark all PRs in stack as ready for review
+gt submit --ready
+
+# Mark specific branch as ready
+gt submit --only feature/auth-api --ready
+```
+
+### When to Use Drafts
+
+- **Early architecture review**: Submit a draft of the data models to get API feedback before building on top of it
+- **WIP checkpoints**: Submit drafts daily so teammates can see progress
+- **Dependent PRs**: Submit the full stack as draft, then mark bottom PRs ready first
+
+```bash
+# Submit full stack as draft
+gt submit --draft
+
+# As each PR gets approved, mark it ready
+gt submit --only feature/auth-models --ready
+# Reviewers see it's ready and approve
+gt land feature/auth-models
+gt submit --only feature/auth-api --ready
+```
+
+---
+
+## PR Templates
+
+Stack reads PR templates from your repository and pre-fills submission forms.
+
+### Template Locations
+
+Stack looks for templates in this order:
+
+1. `.github/PULL_REQUEST_TEMPLATE.md` (GitHub)
+2. `.github/pull_request_template.md` (GitHub, lowercase)
+3. `.gitlab/merge_request_templates/Default.md` (GitLab)
+4. `PULL_REQUEST_TEMPLATE.md` (root)
+
+### Template Variables
+
+Stack replaces these variables in templates:
+
+```markdown
+<!-- .github/PULL_REQUEST_TEMPLATE.md -->
+## Summary
+{{stack_description}}
+
+## Stack Context
+This PR is part of a stack:
+{{stack_list}}
+
+## Checklist
+- [ ] Tests pass
+- [ ] Documentation updated
+- [ ] Breaking changes noted
+```
+
+| Variable | Replaced With |
+|----------|--------------|
+| `{{stack_description}}` | Auto-generated summary of changes |
+| `{{stack_list}}` | Markdown list of PRs in the stack with links |
+| `{{branch_name}}` | Name of the current branch |
+| `{{parent_branch}}` | Name of the parent branch |
+| `{{commit_message}}` | First line of the commit message |
+
+### Stack-Specific Descriptions
+
+Stack generates a description for each PR that includes:
+
+```markdown
+# Description
+<Auto-generated from commit message>
+
+---
+
+## Stack Information
+- **Position**: 2 of 4 in stack
+- **Parent PR**: #42 (feature/auth-models)
+- **Child PR**: #44 (feature/auth-ui)
+
+## Stack
+- #42 `feature/auth-models` ← parent
+- #43 `feature/auth-api` ← **this PR**
+- #44 `feature/auth-ui` ← child
+```
+
+---
+
+## Updating Existing PRs
+
+After modifying a branch, resubmit to update the PR without changing its scope.
+
+### Amending a Submitted Branch
+
+```bash
+# You're on feature/auth-api
+git add .
+gt modify  # Amends the branch
+gt submit  # Updates PR #43 in place
+```
+
+The PR title, description, reviewers, and labels are preserved. Only the diff changes.
+
+### Changing PR Metadata
+
+```bash
+# Update reviewers on existing PRs
+gt submit --reviewers alice --update-only
+
+# Add labels to existing PRs
+gt submit --labels "urgent" --update-only
+
+# Change milestone
+gt submit --milestone "Sprint 13" --update-only
+```
+
+---
+
+## Submit Order and Base Branches
+
+Understanding how Stack manages base branches during submit helps avoid surprises.
+
+### How Base Branches Are Set
+
+When you submit:
+
+```bash
+main
+ └── feature/a      # PR #1, base: main
+      └── feature/b  # PR #2, base: feature/a
+           └── feature/c # PR #3, base: feature/b
+```
+
+Stack creates:
+- PR #1 targeting `main`
+- PR #2 targeting `feature/a`
+- PR #3 targeting `feature/b`
+
+### After Landing a Parent
+
+```bash
+# Land PR #1
+gt land feature/a
+
+# Stack automatically updates PR #2's base to main
+gt sync
+gt submit  # PR #2 now targets main
+```
+
+### Manual Base Branch Override
+
+If you need a branch to target something other than its parent:
+
+```bash
+# Temporarily change base for submit
+gt submit --base main --only feature/b
+
+# Or change permanently
+gt track feature/b --parent main
+gt restack
+gt submit
+```
+
+---
+
+## CI/CD Considerations
+
+### Triggering CI on Stacked PRs
+
+Stacked PRs trigger CI the same way as regular PRs. However, there are nuances:
+
+**GitHub Actions example:**
+
+```yaml
+name: CI
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Important: fetch the base branch for stacked PRs
+          fetch-depth: 0
+      - name: Run tests
+        run: cargo test
+```
+
+The `fetch-depth: 0` is important because stacked PRs may have a base branch that isn't `main`.
+
+### Required Status Checks
+
+If your repository requires status checks to pass before merging:
+
+1. Each PR in the stack runs CI independently
+2. Parent PRs must land before child PRs can merge (GitHub enforces this via base branch)
+3. Use `gt land` to merge in order, or enable auto-merge on each PR
+
+---
+
+## Tips for Effective Submits
+
+1. **Submit early, submit often**: Get PRs open before they're perfect
+2. **Use drafts for WIP**: Don't mark PRs ready until they're actually ready
+3. **Assign reviewers immediately**: Saves the "who should review this?" step
+4. **Label by size**: Helps reviewers prioritize small PRs
+5. **Write clear commit messages**: They become PR descriptions
+6. **Check the stack description**: Review what Stack generated before submitting
+7. **Submit from bottom up**: The bottom PRs are typically ready first
+8. **Use `--dry-run` to preview**: See what Stack would do without doing it
+
+---
+
+## Troubleshooting Submits
+
+### "Base branch does not exist"
+
+This happens when the parent branch hasn't been pushed to remote:
+
+```bash
+# Push parent first
+gt submit --from feature/a
+# Then submit the rest
+gt submit
+```
+
+### "PR already exists for this branch"
+
+Stack detects existing PRs and updates them instead of creating duplicates. If it fails:
+
+```bash
+# Force update metadata
+gt submit --force
+```
+
+### "Cannot submit, stack has conflicts"
+
+Restack first, then submit:
+
+```bash
+gt restack
+gt submit
+```
