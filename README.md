@@ -67,6 +67,9 @@ gt log
 #   ○ feature/step-2
 #     ◉ feature/step-3  ← you are here
 
+# Or explore interactively
+gt tui
+
 # Submit all as PRs
 gt submit --stack
 ```
@@ -82,6 +85,8 @@ gt submit --stack
 | `gt submit --stack` | Create/update PRs for the stack |
 | `gt sync` | Fetch, restack, clean merged branches |
 | `gt land --stack` | Merge the stack in order |
+| `gt tui` | Interactive terminal UI |
+| `gt modify` | Edit a branch's commits interactively |
 
 ## Key Features
 
@@ -89,6 +94,9 @@ gt submit --stack
 - **GitHub + GitLab**: Full support for both platforms
 - **PR automation**: Reviewers, labels, templates, draft PRs
 - **Stack-aware submit**: One command creates PRs for your entire stack
+- **Interactive TUI**: Keyboard-driven terminal UI for browsing stacks and status
+- **MCP Server**: AI agent integration via Model Context Protocol
+- **Web Dashboard**: Self-hosted visualization and management UI
 - **Conflict handling**: `gt continue` / `gt abort` for rebase conflicts
 - **Undo/redo**: Recover from mistakes with `gt undo`
 
@@ -104,9 +112,22 @@ See Stack in action with an interactive demo:
 
 Full documentation at **[docs.neullabs.com/stkd](https://docs.neullabs.com/stkd)**:
 
-- [Getting Started](https://docs.neullabs.com/stkd/getting-started)
-- [Command Reference](https://docs.neullabs.com/stkd/commands)
-- [Tutorials](https://docs.neullabs.com/stkd/tutorials)
+- [Getting Started](https://docs.neullabs.com/stkd/getting-started) — Installation, quick start, first stack, authentication
+- [Concepts](https://docs.neullabs.com/stkd/concepts/stacked-diffs) — How stacked diffs work
+- [Command Reference](https://docs.neullabs.com/stkd/commands) — All commands with examples and flags
+- [Guides](https://docs.neullabs.com/stkd/guides/workflows):
+  - [Interactive TUI](https://docs.neullabs.com/stkd/guides/tui) — Keyboard-driven terminal UI
+  - [Restacking Deep Dive](https://docs.neullabs.com/stkd/guides/restacking)
+  - [Branch Management](https://docs.neullabs.com/stkd/guides/branch-management)
+  - [Advanced Submit](https://docs.neullabs.com/stkd/guides/advanced-submit)
+  - [Stack Templates](https://docs.neullabs.com/stkd/guides/templates)
+  - [Performance & Large Repos](https://docs.neullabs.com/stkd/guides/performance)
+  - [Day in the Life](https://docs.neullabs.com/stkd/guides/day-in-the-life)
+  - [Web Dashboard](https://docs.neullabs.com/stkd/guides/dashboard)
+  - [MCP Server for AI Agents](https://docs.neullabs.com/stkd/guides/mcp)
+  - [Open Source Maintainers](https://docs.neullabs.com/stkd/guides/open-source)
+  - [Migrating from Graphite](https://docs.neullabs.com/stkd/guides/migration-graphite)
+  - [Migrating from Git](https://docs.neullabs.com/stkd/guides/migration-git)
 
 ## Architecture
 
