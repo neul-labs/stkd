@@ -1,0 +1,38 @@
+[package]
+name = "stkd-tui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description = "Terminal UI for Stack - interactive stacked diffs browser"
+readme.workspace = true
+authors.workspace = true
+
+[dependencies]
+stkd-core = { path = "../stkd-core", version = "0.1.0" }
+stkd-engine = { path = "../stkd-engine", version = "0.1.0" }
+stkd-provider-api = { path = "../stkd-provider-api", version = "0.1.0" }
+
+# TUI framework
+ratatui = { version = "0.29", features = ["crossterm"] }
+crossterm = { version = "0.28", features = ["event-stream"] }
+
+# Async
+tokio = { workspace = true }
+futures-util = "0.3"
+
+# Error / logging
+anyhow = { workspace = true }
+tracing = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Time
+chrono = { workspace = true }
+
+# Utilities
+unicode-width = "0.2"

@@ -162,6 +162,12 @@ enum Commands {
 
     /// Install Claude Code skill for Stack
     InstallSkill(install_skill::InstallSkillArgs),
+
+    // ========================================================================
+    // Interactive TUI
+    // ========================================================================
+    /// Launch interactive TUI
+    Tui(tui::TuiArgs),
 }
 
 #[tokio::main]
@@ -276,6 +282,9 @@ async fn main() -> Result<()> {
 
         // Install Skill
         Commands::InstallSkill(args) => install_skill::execute(args).await,
+
+        // TUI
+        Commands::Tui(args) => tui::execute(args).await,
     };
 
     if let Err(e) = result {

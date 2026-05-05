@@ -233,7 +233,7 @@ mod tests {
         let ctx = TestContext::new();
         assert!(ctx.path.exists());
         assert!(ctx.path.join(".git").exists());
-        assert_eq!(ctx.current_branch(), "master");
+        assert_eq!(ctx.current_branch(), "main");
         assert!(ctx.is_clean());
     }
 

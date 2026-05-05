@@ -166,7 +166,7 @@ fn test_delete_branch() {
     assert!(ctx.branch_exists("feature/to-delete"));
 
     // Go back to main
-    run_git(&ctx.path, &["checkout", "master"]);
+    run_git(&ctx.path, &["checkout", "main"]);
 
     // Delete the branch
     run_stkd_success(&ctx.path, &["delete", "feature/to-delete", "--force"]);

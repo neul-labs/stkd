@@ -20,6 +20,7 @@ stkd-engine = { path = "../stkd-engine", version = "0.1.0" }
 stkd-provider-api = { path = "../stkd-provider-api", version = "0.1.0" }
 stkd-github = { path = "../stkd-github", version = "0.1.0" }
 stkd-gitlab = { path = "../stkd-gitlab", version = "0.1.0" }
+stkd-tui = { path = "../stkd-tui", version = "0.1.0" }
 
 # Git
 git2 = { workspace = true }
