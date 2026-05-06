@@ -20,8 +20,8 @@ impl TestContext {
         let dir = TempDir::new().expect("Failed to create temp dir");
         let path = dir.path().to_path_buf();
 
-        // Initialize git repo
-        run_git(&path, &["init"]);
+        // Initialize git repo with main as default branch
+        run_git(&path, &["init", "--initial-branch=main"]);
 
         // Configure git user for commits
         run_git(&path, &["config", "user.email", "test@example.com"]);
