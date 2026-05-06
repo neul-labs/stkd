@@ -17,6 +17,12 @@ pub struct EventStream {
     tick: time::Interval,
 }
 
+impl Default for EventStream {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl EventStream {
     pub fn new() -> Self {
         Self {

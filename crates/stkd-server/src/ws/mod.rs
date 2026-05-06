@@ -29,7 +29,9 @@ pub struct WsState {
 
 impl WsState {
     pub fn new() -> Self {
-        Self { hub: Arc::new(Hub::new()) }
+        Self {
+            hub: Arc::new(Hub::new()),
+        }
     }
 
     pub fn hub(&self) -> &Hub {
@@ -44,10 +46,7 @@ impl Default for WsState {
 }
 
 /// WebSocket upgrade handler.
-async fn ws_handler(
-    ws: WebSocketUpgrade,
-    State(state): State<AppState>,
-) -> impl IntoResponse {
+async fn ws_handler(ws: WebSocketUpgrade, State(state): State<AppState>) -> impl IntoResponse {
     ws.on_upgrade(move |socket| handle_socket(socket, state))
 }
 

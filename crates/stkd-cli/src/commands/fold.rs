@@ -2,9 +2,9 @@
 
 use anyhow::{Context, Result};
 use clap::Args;
-use stkd_core::Repository;
 use std::path::Path;
 use std::process::Command;
+use stkd_core::Repository;
 
 use crate::output;
 
@@ -71,9 +71,9 @@ pub async fn execute(args: FoldArgs) -> Result<()> {
         }
 
         // Get the parent branch for rebase
-        let branch_name = repo.current_branch()?.ok_or_else(|| {
-            anyhow::anyhow!("Not on a branch")
-        })?;
+        let branch_name = repo
+            .current_branch()?
+            .ok_or_else(|| anyhow::anyhow!("Not on a branch"))?;
         let graph = repo.load_graph()?;
         let branch_info = repo.storage().load_branch(&branch_name)?;
 
@@ -89,13 +89,7 @@ pub async fn execute(args: FoldArgs) -> Result<()> {
 
         // Run autosquash rebase
         let status = Command::new("git")
-            .args([
-                "rebase",
-                "-i",
-                "--autosquash",
-                "--autostash",
-                &parent,
-            ])
+            .args(["rebase", "-i", "--autosquash", "--autostash", &parent])
             .env("GIT_SEQUENCE_EDITOR", "true") // Auto-accept the rebase todo
             .current_dir(workdir)
             .status()

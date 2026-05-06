@@ -22,7 +22,10 @@ impl GitHubClient {
     /// Create a client with custom base URL (for GitHub Enterprise)
     pub fn with_base_url(auth: GitHubAuth, base_url: &str) -> Result<Self> {
         let mut headers = HeaderMap::new();
-        headers.insert(ACCEPT, HeaderValue::from_static("application/vnd.github+json"));
+        headers.insert(
+            ACCEPT,
+            HeaderValue::from_static("application/vnd.github+json"),
+        );
         headers.insert(USER_AGENT, HeaderValue::from_static("stkd-cli/0.1.0"));
         headers.insert(
             "X-GitHub-Api-Version",
@@ -85,7 +88,11 @@ impl GitHubClient {
     }
 
     /// Make a PATCH request
-    pub async fn patch<T: DeserializeOwned, B: Serialize>(&self, path: &str, body: &B) -> Result<T> {
+    pub async fn patch<T: DeserializeOwned, B: Serialize>(
+        &self,
+        path: &str,
+        body: &B,
+    ) -> Result<T> {
         let url = format!("{}{}", self.base_url, path);
 
         let response = self

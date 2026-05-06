@@ -28,10 +28,14 @@ struct InfoJson {
 pub async fn execute(args: InfoArgs, json: bool) -> Result<()> {
     let repo = Repository::open(".")?;
 
-    let branch = args.branch.or_else(|| repo.current_branch().ok().flatten())
+    let branch = args
+        .branch
+        .or_else(|| repo.current_branch().ok().flatten())
         .ok_or_else(|| anyhow::anyhow!("No branch specified and not on a branch"))?;
 
-    let info = repo.storage().load_branch(&branch)?
+    let info = repo
+        .storage()
+        .load_branch(&branch)?
         .ok_or_else(|| anyhow::anyhow!("Branch '{}' is not tracked", branch))?;
 
     if json {

@@ -52,7 +52,9 @@ pub async fn execute(args: RedoArgs) -> Result<()> {
             output::success(&format!("Removed tracking for '{}'", branch));
         }
 
-        HistoryEntry::RenameBranch { old_name, new_name, .. } => {
+        HistoryEntry::RenameBranch {
+            old_name, new_name, ..
+        } => {
             // Redo rename = rename forward again
             if let Some(mut info) = repo.storage().load_branch(old_name)? {
                 repo.storage().delete_branch(old_name)?;
@@ -69,7 +71,10 @@ pub async fn execute(args: RedoArgs) -> Result<()> {
             repo.storage().update_branch(branch, |info| {
                 info.parent = new_parent.clone();
             })?;
-            output::success(&format!("Changed parent of '{}' to '{}'", branch, new_parent));
+            output::success(&format!(
+                "Changed parent of '{}' to '{}'",
+                branch, new_parent
+            ));
         }
 
         HistoryEntry::SetMergeRequest {

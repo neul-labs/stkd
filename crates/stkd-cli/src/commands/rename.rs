@@ -15,9 +15,9 @@ pub struct RenameArgs {
 pub async fn execute(args: RenameArgs) -> Result<()> {
     let repo = Repository::open(".")?;
 
-    let old_name = repo.current_branch()?.ok_or_else(|| {
-        anyhow::anyhow!("Not on a branch")
-    })?;
+    let old_name = repo
+        .current_branch()?
+        .ok_or_else(|| anyhow::anyhow!("Not on a branch"))?;
 
     let info = repo.rename_branch(&args.name)?;
 

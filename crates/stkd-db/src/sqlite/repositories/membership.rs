@@ -58,14 +58,13 @@ impl MembershipRepository for SqliteMembershipRepository {
     }
 
     async fn update_role(&self, org_id: Uuid, user_id: Uuid, role: MembershipRole) -> DbResult<()> {
-        let result = sqlx::query(
-            "UPDATE memberships SET role = ? WHERE org_id = ? AND user_id = ?",
-        )
-        .bind(role.to_string())
-        .bind(org_id.to_string())
-        .bind(user_id.to_string())
-        .execute(&self.pool)
-        .await?;
+        let result =
+            sqlx::query("UPDATE memberships SET role = ? WHERE org_id = ? AND user_id = ?")
+                .bind(role.to_string())
+                .bind(org_id.to_string())
+                .bind(user_id.to_string())
+                .execute(&self.pool)
+                .await?;
 
         if result.rows_affected() == 0 {
             return Err(DbError::NotFound("Membership not found".to_string()));
@@ -75,13 +74,11 @@ impl MembershipRepository for SqliteMembershipRepository {
     }
 
     async fn remove(&self, org_id: Uuid, user_id: Uuid) -> DbResult<()> {
-        let result = sqlx::query(
-            "DELETE FROM memberships WHERE org_id = ? AND user_id = ?",
-        )
-        .bind(org_id.to_string())
-        .bind(user_id.to_string())
-        .execute(&self.pool)
-        .await?;
+        let result = sqlx::query("DELETE FROM memberships WHERE org_id = ? AND user_id = ?")
+            .bind(org_id.to_string())
+            .bind(user_id.to_string())
+            .execute(&self.pool)
+            .await?;
 
         if result.rows_affected() == 0 {
             return Err(DbError::NotFound("Membership not found".to_string()));
@@ -125,24 +122,22 @@ impl MembershipRepository for SqliteMembershipRepository {
     }
 
     async fn is_member(&self, org_id: Uuid, user_id: Uuid) -> DbResult<bool> {
-        let count: (i64,) = sqlx::query_as(
-            "SELECT COUNT(*) FROM memberships WHERE org_id = ? AND user_id = ?",
-        )
-        .bind(org_id.to_string())
-        .bind(user_id.to_string())
-        .fetch_one(&self.pool)
-        .await?;
+        let count: (i64,) =
+            sqlx::query_as("SELECT COUNT(*) FROM memberships WHERE org_id = ? AND user_id = ?")
+                .bind(org_id.to_string())
+                .bind(user_id.to_string())
+                .fetch_one(&self.pool)
+                .await?;
 
         Ok(count.0 > 0)
     }
 
     async fn owner_count(&self, org_id: Uuid) -> DbResult<usize> {
-        let count: (i64,) = sqlx::query_as(
-            "SELECT COUNT(*) FROM memberships WHERE org_id = ? AND role = 'owner'",
-        )
-        .bind(org_id.to_string())
-        .fetch_one(&self.pool)
-        .await?;
+        let count: (i64,) =
+            sqlx::query_as("SELECT COUNT(*) FROM memberships WHERE org_id = ? AND role = 'owner'")
+                .bind(org_id.to_string())
+                .fetch_one(&self.pool)
+                .await?;
 
         Ok(count.0 as usize)
     }

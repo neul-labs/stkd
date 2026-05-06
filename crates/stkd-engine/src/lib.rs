@@ -20,17 +20,17 @@
 //! }
 //! ```
 
+pub mod init;
+pub mod land;
 pub mod provider;
+pub mod restack;
+pub mod retry;
 pub mod submit;
 pub mod sync;
-pub mod land;
-pub mod restack;
-pub mod init;
-pub mod retry;
 
-pub use provider::{ProviderContext, ProviderType, detect_provider_type};
-pub use submit::{submit, SubmitOptions, SubmitResult, CreatedMr, UpdatedMr, select_branches};
-pub use sync::{sync, SyncOptions, SyncResult};
-pub use land::{land, LandOptions, LandResult, LandedBranch};
-pub use restack::{restack, RestackOptions, RestackResult, RestackEntry, RestackStatus};
 pub use init::{init, InitOptions, InitResult};
+pub use land::{land, LandOptions, LandResult, LandedBranch};
+pub use provider::{detect_provider_type, ProviderContext, ProviderType};
+pub use restack::{restack, RestackEntry, RestackOptions, RestackResult, RestackStatus};
+pub use submit::{select_branches, submit, CreatedMr, SubmitOptions, SubmitResult, UpdatedMr};
+pub use sync::{sync, SyncOptions, SyncResult};

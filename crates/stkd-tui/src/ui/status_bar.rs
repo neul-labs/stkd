@@ -24,7 +24,9 @@ pub fn draw(frame: &mut Frame, app: &App, area: Rect) {
     if app.spinner_active {
         spans.push(Span::styled(
             " ⠋ ",
-            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
         ));
     }
 
@@ -53,8 +55,14 @@ pub fn draw(frame: &mut Frame, app: &App, area: Rect) {
     }
 
     // Help hint on the right
-    spans.push(Span::styled(" ? help ", Style::default().fg(Color::DarkGray)));
-    spans.push(Span::styled(" q quit ", Style::default().fg(Color::DarkGray)));
+    spans.push(Span::styled(
+        " ? help ",
+        Style::default().fg(Color::DarkGray),
+    ));
+    spans.push(Span::styled(
+        " q quit ",
+        Style::default().fg(Color::DarkGray),
+    ));
 
     let line = Line::from(spans);
     let paragraph = Paragraph::new(line);

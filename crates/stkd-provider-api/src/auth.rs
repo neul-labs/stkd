@@ -253,7 +253,9 @@ impl FileCredentialStore {
 impl CredentialStore for FileCredentialStore {
     fn credentials_path(&self, provider: &str, host: &str) -> io::Result<PathBuf> {
         let safe_host = Self::sanitize_host(host);
-        Ok(self.base_dir.join(format!("{}_{}.json", provider, safe_host)))
+        Ok(self
+            .base_dir
+            .join(format!("{}_{}.json", provider, safe_host)))
     }
 
     fn load(&self, provider: &str, host: &str) -> io::Result<Option<StoredCredential>> {

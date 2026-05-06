@@ -2,9 +2,9 @@
 
 use anyhow::{Context, Result};
 use clap::Args;
-use stkd_core::Repository;
 use std::path::Path;
 use std::process::Command;
+use stkd_core::Repository;
 
 use crate::output;
 
@@ -27,9 +27,9 @@ pub struct SquashArgs {
 pub async fn execute(args: SquashArgs) -> Result<()> {
     let repo = Repository::open(".")?;
     let workdir = repo.git().path().parent().unwrap_or(Path::new("."));
-    let branch_name = repo.current_branch()?.ok_or_else(|| {
-        anyhow::anyhow!("Not on a branch")
-    })?;
+    let branch_name = repo
+        .current_branch()?
+        .ok_or_else(|| anyhow::anyhow!("Not on a branch"))?;
 
     // Get the parent branch to find the merge base
     let graph = repo.load_graph()?;
@@ -114,10 +114,7 @@ pub async fn execute(args: SquashArgs) -> Result<()> {
         anyhow::bail!("Git commit failed");
     }
 
-    output::success(&format!(
-        "Squashed {} commits into one",
-        commits_to_squash
-    ));
+    output::success(&format!("Squashed {} commits into one", commits_to_squash));
 
     Ok(())
 }

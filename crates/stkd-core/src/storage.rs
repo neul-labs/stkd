@@ -24,8 +24,8 @@
 //! let branches = repo.storage().list_branches()?;
 //! ```
 
-use std::path::{Path, PathBuf};
 use std::fs;
+use std::path::{Path, PathBuf};
 
 use crate::branch::BranchInfo;
 use crate::config::StackConfig;
@@ -77,7 +77,10 @@ impl OperationPhase {
 
     /// Check if an operation is in progress (including conflict state).
     pub fn is_active(&self) -> bool {
-        matches!(self, OperationPhase::InProgress { .. } | OperationPhase::Conflict { .. })
+        matches!(
+            self,
+            OperationPhase::InProgress { .. } | OperationPhase::Conflict { .. }
+        )
     }
 
     /// Get the underlying operation, if any.
@@ -94,7 +97,9 @@ impl OperationPhase {
     pub fn transition(self, new_phase: OperationPhase) -> Result<Self> {
         match (&self, &new_phase) {
             // Reset to Idle is always allowed from terminal states
-            (OperationPhase::Completed | OperationPhase::Aborted, OperationPhase::Idle) => Ok(new_phase),
+            (OperationPhase::Completed | OperationPhase::Aborted, OperationPhase::Idle) => {
+                Ok(new_phase)
+            }
             // Idle can start an operation
             (OperationPhase::Idle, OperationPhase::InProgress { .. }) => Ok(new_phase),
             // InProgress can complete, abort, or hit a conflict
@@ -392,7 +397,7 @@ impl Storage {
             let entry = entry?;
             let path = entry.path();
 
-            if path.extension().map_or(false, |ext| ext == "json") {
+            if path.extension().is_some_and(|ext| ext == "json") {
                 let content = fs::read_to_string(&path)?;
                 if let Ok(info) = serde_json::from_str::<BranchInfo>(&content) {
                     branches.push(info);
@@ -445,7 +450,10 @@ impl Storage {
     /// Advance the operation to the next step.
     pub fn advance_operation(&self, step: usize) -> Result<()> {
         let mut state = self.load_state()?;
-        if let OperationPhase::InProgress { ref op, ref total, .. } = state.phase {
+        if let OperationPhase::InProgress {
+            ref op, ref total, ..
+        } = state.phase
+        {
             state.phase = OperationPhase::InProgress {
                 op: op.clone(),
                 step,
@@ -558,10 +566,12 @@ impl RepoLock {
         let mut lock = fslock::LockFile::open(&path)
             .map_err(|e| Error::storage(format!("Failed to open lock file: {e}")))?;
 
-        if !lock.try_lock()
+        if !lock
+            .try_lock()
             .map_err(|e| Error::storage(format!("Failed to acquire lock: {e}")))?
         {
-            let pid = std::fs::read_to_string(&path).ok()
+            let pid = std::fs::read_to_string(&path)
+                .ok()
                 .and_then(|s| s.trim().parse::<u32>().ok());
             let msg = match pid {
                 Some(p) => format!("Another operation is in progress (PID: {p})"),
@@ -607,8 +617,10 @@ mod tests {
     fn test_config_roundtrip() {
         let (_dir, storage) = setup();
 
-        let mut config = StackConfig::default();
-        config.trunk = "develop".to_string();
+        let config = StackConfig {
+            trunk: "develop".to_string(),
+            ..Default::default()
+        };
 
         storage.save_config(&config).unwrap();
         let loaded = storage.load_config().unwrap();
@@ -643,8 +655,12 @@ mod tests {
     fn test_list_branches() {
         let (_dir, storage) = setup();
 
-        storage.save_branch(&BranchInfo::new("feature/a", "main")).unwrap();
-        storage.save_branch(&BranchInfo::new("feature/b", "main")).unwrap();
+        storage
+            .save_branch(&BranchInfo::new("feature/a", "main"))
+            .unwrap();
+        storage
+            .save_branch(&BranchInfo::new("feature/b", "main"))
+            .unwrap();
 
         let branches = storage.list_branches().unwrap();
         assert_eq!(branches.len(), 2);
@@ -655,10 +671,15 @@ mod tests {
         let (_dir, storage) = setup();
 
         // Start operation
-        storage.start_operation(OngoingOperation::Restack {
-            branches: vec!["a".to_string(), "b".to_string()],
-            completed: vec![],
-        }, 2).unwrap();
+        storage
+            .start_operation(
+                OngoingOperation::Restack {
+                    branches: vec!["a".to_string(), "b".to_string()],
+                    completed: vec![],
+                },
+                2,
+            )
+            .unwrap();
 
         let op = storage.current_operation().unwrap();
         assert!(op.is_some());

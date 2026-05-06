@@ -66,7 +66,11 @@ fn draw_tabs(frame: &mut Frame, app: &App, area: Rect) {
                 .title(" Stack TUI ")
                 .title_alignment(Alignment::Center),
         )
-        .highlight_style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        .highlight_style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )
         .select(app.current_tab as usize);
 
     frame.render_widget(tabs, area);
@@ -113,12 +117,18 @@ fn draw_status_tab(frame: &mut Frame, app: &App, area: Rect) {
         ])
         .split(area);
 
-    let mut branch_lines = vec![
-        Line::from(vec![
-            Span::styled("Current Branch  ", Style::default().add_modifier(Modifier::BOLD)),
-            Span::styled(&app.current_branch, Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
-        ]),
-    ];
+    let mut branch_lines = vec![Line::from(vec![
+        Span::styled(
+            "Current Branch  ",
+            Style::default().add_modifier(Modifier::BOLD),
+        ),
+        Span::styled(
+            &app.current_branch,
+            Style::default()
+                .fg(Color::Green)
+                .add_modifier(Modifier::BOLD),
+        ),
+    ])];
 
     if let Some(entry) = app.selected_entry() {
         if let Some(ref parent) = entry.parent {
@@ -141,9 +151,7 @@ fn draw_status_tab(frame: &mut Frame, app: &App, area: Rect) {
         }
     }
 
-    let branch_block = Block::default()
-        .borders(Borders::ALL)
-        .title(" Branch ");
+    let branch_block = Block::default().borders(Borders::ALL).title(" Branch ");
     let branch_para = Paragraph::new(Text::from(branch_lines)).block(branch_block);
     frame.render_widget(branch_para, chunks[0]);
 
@@ -175,7 +183,10 @@ fn draw_status_tab(frame: &mut Frame, app: &App, area: Rect) {
                     if app.spinner_active {
                         Span::styled("Fetching...", Style::default().fg(Color::Yellow))
                     } else {
-                        Span::styled("Press 'g' to fetch from provider", Style::default().fg(Color::DarkGray))
+                        Span::styled(
+                            "Press 'g' to fetch from provider",
+                            Style::default().fg(Color::DarkGray),
+                        )
                     },
                 ]));
             }
@@ -293,7 +304,9 @@ fn draw_actions_tab(frame: &mut Frame, _app: &App, area: Rect) {
         Line::from(""),
         Line::from(Span::styled(
             " Keyboard Shortcuts ",
-            Style::default().add_modifier(Modifier::BOLD).fg(Color::Cyan),
+            Style::default()
+                .add_modifier(Modifier::BOLD)
+                .fg(Color::Cyan),
         )),
         Line::from(""),
     ];
@@ -301,7 +314,10 @@ fn draw_actions_tab(frame: &mut Frame, _app: &App, area: Rect) {
     for (key, action, desc) in actions {
         lines.push(Line::from(vec![
             Span::styled(format!(" {:<10} ", key), Style::default().fg(Color::Yellow)),
-            Span::styled(format!("{:<16}", action), Style::default().add_modifier(Modifier::BOLD)),
+            Span::styled(
+                format!("{:<16}", action),
+                Style::default().add_modifier(Modifier::BOLD),
+            ),
             Span::styled(desc, Style::default().fg(Color::Gray)),
         ]));
     }
@@ -320,7 +336,9 @@ fn draw_help(frame: &mut Frame, _area: Rect, area: Rect) {
         Line::from(""),
         Line::from(Span::styled(
             " Stack TUI Help ",
-            Style::default().add_modifier(Modifier::BOLD).fg(Color::Cyan),
+            Style::default()
+                .add_modifier(Modifier::BOLD)
+                .fg(Color::Cyan),
         )),
         Line::from(""),
         Line::from("Navigation:"),

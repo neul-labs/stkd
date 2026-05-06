@@ -170,8 +170,8 @@ impl StackConfig {
     pub fn effective_provider(&self) -> Option<ProviderConfig> {
         if let Some(ref provider) = self.provider {
             Some(provider.clone())
-        } else if let Some(ref github) = self.github {
-            Some(ProviderConfig {
+        } else {
+            self.github.as_ref().map(|github| ProviderConfig {
                 provider_type: ProviderType::GitHub,
                 owner: Some(github.owner.clone()),
                 repo: Some(github.repo.clone()),
@@ -179,8 +179,6 @@ impl StackConfig {
                 web_url: None,
                 host: Some("github.com".to_string()),
             })
-        } else {
-            None
         }
     }
 }
@@ -222,7 +220,9 @@ impl GitHubConfig {
 
         // Handle HTTPS URLs: https://github.com/owner/repo.git
         if url.contains("github.com") {
-            let url = url.strip_prefix("https://").or_else(|| url.strip_prefix("http://"))?;
+            let url = url
+                .strip_prefix("https://")
+                .or_else(|| url.strip_prefix("http://"))?;
             let url = url.strip_prefix("github.com/")?;
             let url = url.strip_suffix(".git").unwrap_or(url);
             let parts: Vec<&str> = url.split('/').collect();
@@ -445,11 +445,7 @@ fn parse_remote_url(url: &str) -> Option<(String, String, String)> {
             let path = parts[1].strip_suffix(".git").unwrap_or(parts[1]);
             let path_parts: Vec<&str> = path.split('/').collect();
             if path_parts.len() >= 2 {
-                return Some((
-                    path_parts[0].to_string(),
-                    path_parts[1].to_string(),
-                    host,
-                ));
+                return Some((path_parts[0].to_string(), path_parts[1].to_string(), host));
             }
         }
     }
@@ -465,11 +461,7 @@ fn parse_remote_url(url: &str) -> Option<(String, String, String)> {
         let path = parts[1].strip_suffix(".git").unwrap_or(parts[1]);
         let path_parts: Vec<&str> = path.split('/').collect();
         if path_parts.len() >= 2 {
-            return Some((
-                path_parts[0].to_string(),
-                path_parts[1].to_string(),
-                host,
-            ));
+            return Some((path_parts[0].to_string(), path_parts[1].to_string(), host));
         }
     }
 
@@ -581,7 +573,7 @@ impl Default for SyncConfig {
 /// with additional policy enforcement requirements.
 ///
 /// **Note**: This feature is currently experimental and may change.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct VcsIntegration {
     /// Enable VCS integration features.
     #[serde(default)]
@@ -596,16 +588,6 @@ pub struct VcsIntegration {
     /// When enabled, `gt land` will check policy gates before merging.
     #[serde(default)]
     pub respect_policy_gates: bool,
-}
-
-impl Default for VcsIntegration {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            share_intent: false,
-            respect_policy_gates: false,
-        }
-    }
 }
 
 // Default value helpers

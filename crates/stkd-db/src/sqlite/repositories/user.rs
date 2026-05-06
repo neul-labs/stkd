@@ -46,12 +46,10 @@ impl UserRepository for SqliteUserRepository {
     }
 
     async fn get_by_id(&self, id: Uuid) -> DbResult<Option<User>> {
-        let row = sqlx::query_as::<_, UserRow>(
-            "SELECT * FROM users WHERE id = ?",
-        )
-        .bind(id.to_string())
-        .fetch_optional(&self.pool)
-        .await?;
+        let row = sqlx::query_as::<_, UserRow>("SELECT * FROM users WHERE id = ?")
+            .bind(id.to_string())
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(row.map(|r| r.into()))
     }
@@ -69,12 +67,10 @@ impl UserRepository for SqliteUserRepository {
     }
 
     async fn get_by_username(&self, username: &str) -> DbResult<Option<User>> {
-        let row = sqlx::query_as::<_, UserRow>(
-            "SELECT * FROM users WHERE username = ?",
-        )
-        .bind(username)
-        .fetch_optional(&self.pool)
-        .await?;
+        let row = sqlx::query_as::<_, UserRow>("SELECT * FROM users WHERE username = ?")
+            .bind(username)
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(row.map(|r| r.into()))
     }

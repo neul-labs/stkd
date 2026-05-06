@@ -195,11 +195,7 @@ impl GitLabProvider {
     }
 
     /// Execute a request that returns no content.
-    async fn request_no_content(
-        &self,
-        method: reqwest::Method,
-        url: &str,
-    ) -> ProviderResult<()> {
+    async fn request_no_content(&self, method: reqwest::Method, url: &str) -> ProviderResult<()> {
         trace!("GitLab API: {} {}", method, url);
 
         let response = self
@@ -243,9 +239,7 @@ impl GitLabProvider {
                 // Try to parse retry-after from response
                 ProviderError::RateLimited { retry_after: None }
             }
-            StatusCode::CONFLICT => {
-                ProviderError::MergeConflict("Resource conflict".to_string())
-            }
+            StatusCode::CONFLICT => ProviderError::MergeConflict("Resource conflict".to_string()),
             _ => ProviderError::ProviderSpecific(format!("HTTP {}: {}", status, body)),
         }
     }
@@ -780,7 +774,10 @@ impl RepositoryProvider for GitLabProvider {
         // HTTPS format
         if let Ok(parsed) = Url::parse(url) {
             if parsed.host_str() == Some(&self.host) {
-                let path = parsed.path().trim_start_matches('/').trim_end_matches(".git");
+                let path = parsed
+                    .path()
+                    .trim_start_matches('/')
+                    .trim_end_matches(".git");
                 return parse_gitlab_path(path);
             }
         }
@@ -813,7 +810,10 @@ impl PipelineProvider for GitLabProvider {
     ) -> ProviderResult<Option<Pipeline>> {
         let url = self.project_url(
             repo,
-            &format!("/pipelines?ref={}&per_page=1", urlencoding::encode(ref_name)),
+            &format!(
+                "/pipelines?ref={}&per_page=1",
+                urlencoding::encode(ref_name)
+            ),
         );
 
         let pipelines: Vec<GlPipeline> = self.request(reqwest::Method::GET, &url).await?;
@@ -922,8 +922,6 @@ impl ApprovalProvider for GitLabProvider {
 
         if approvals.approved {
             Ok(ApprovalState::Approved)
-        } else if approvals.approvals_left.unwrap_or(0) > 0 {
-            Ok(ApprovalState::Pending)
         } else {
             Ok(ApprovalState::Pending)
         }
@@ -1141,7 +1139,10 @@ impl BranchProtectionProvider for GitLabProvider {
         );
 
         // GitLab returns 404 if branch is not protected
-        match self.request::<serde_json::Value>(reqwest::Method::GET, &url).await {
+        match self
+            .request::<serde_json::Value>(reqwest::Method::GET, &url)
+            .await
+        {
             Ok(json) => {
                 let protection = BranchProtection {
                     pattern: json
@@ -1247,6 +1248,9 @@ mod tests {
         assert_eq!(parse_pipeline_status("canceled"), PipelineStatus::Canceled);
         assert_eq!(parse_pipeline_status("cancelled"), PipelineStatus::Canceled);
         assert_eq!(parse_pipeline_status("skipped"), PipelineStatus::Skipped);
-        assert_eq!(parse_pipeline_status("unknown_status"), PipelineStatus::Unknown);
+        assert_eq!(
+            parse_pipeline_status("unknown_status"),
+            PipelineStatus::Unknown
+        );
     }
 }

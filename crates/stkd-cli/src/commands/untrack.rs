@@ -15,7 +15,9 @@ pub struct UntrackArgs {
 pub async fn execute(args: UntrackArgs) -> Result<()> {
     let repo = Repository::open(".")?;
 
-    let branch = args.branch.or_else(|| repo.current_branch().ok().flatten())
+    let branch = args
+        .branch
+        .or_else(|| repo.current_branch().ok().flatten())
         .ok_or_else(|| anyhow::anyhow!("No branch specified and not on a branch"))?;
 
     repo.untrack_branch(&branch)?;

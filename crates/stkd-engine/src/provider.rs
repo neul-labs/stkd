@@ -48,19 +48,22 @@ impl ProviderContext {
         // Create provider based on type
         let (provider, repo_id): (Box<dyn Provider>, RepoId) = match provider_type {
             ProviderType::GitHub => {
-                let auth_token = stkd_github::auth::load_credentials()?
-                    .ok_or_else(|| anyhow::anyhow!("Not authenticated with GitHub. Run 'gt auth --github' first."))?;
+                let auth_token = stkd_github::auth::load_credentials()?.ok_or_else(|| {
+                    anyhow::anyhow!("Not authenticated with GitHub. Run 'gt auth --github' first.")
+                })?;
 
                 let provider = stkd_github::GitHubProvider::with_auth(auth_token.to_auth())?;
 
-                let repo_id = provider.parse_remote_url(&remote_url)
-                    .ok_or_else(|| anyhow::anyhow!("Could not parse GitHub repository from remote URL"))?;
+                let repo_id = provider.parse_remote_url(&remote_url).ok_or_else(|| {
+                    anyhow::anyhow!("Could not parse GitHub repository from remote URL")
+                })?;
 
                 (Box::new(provider), repo_id)
             }
             ProviderType::GitLab => {
-                let auth_token = stkd_gitlab::auth::load_credentials(&host)?
-                    .ok_or_else(|| anyhow::anyhow!("Not authenticated with GitLab. Run 'gt auth --gitlab' first."))?;
+                let auth_token = stkd_gitlab::auth::load_credentials(&host)?.ok_or_else(|| {
+                    anyhow::anyhow!("Not authenticated with GitLab. Run 'gt auth --gitlab' first.")
+                })?;
 
                 let provider = if host == "gitlab.com" {
                     stkd_gitlab::GitLabProvider::new(auth_token.token)?
@@ -68,8 +71,9 @@ impl ProviderContext {
                     stkd_gitlab::GitLabProvider::with_host(auth_token.token, &host)?
                 };
 
-                let repo_id = provider.parse_remote_url(&remote_url)
-                    .ok_or_else(|| anyhow::anyhow!("Could not parse GitLab repository from remote URL"))?;
+                let repo_id = provider.parse_remote_url(&remote_url).ok_or_else(|| {
+                    anyhow::anyhow!("Could not parse GitLab repository from remote URL")
+                })?;
 
                 (Box::new(provider), repo_id)
             }

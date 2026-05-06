@@ -2,9 +2,9 @@
 
 use anyhow::{Context, Result};
 use clap::Args;
-use stkd_core::Repository;
 use std::path::Path;
 use std::process::Command;
+use stkd_core::Repository;
 
 use crate::output;
 
@@ -32,7 +32,10 @@ pub async fn execute(args: SplitArgs) -> Result<()> {
         "Splitting current commit into {} commits",
         args.count
     ));
-    output::info(&format!("Original message: {}", commit_msg.lines().next().unwrap_or("")));
+    output::info(&format!(
+        "Original message: {}",
+        commit_msg.lines().next().unwrap_or("")
+    ));
 
     // Soft reset HEAD~1 to unstage the commit
     let status = Command::new("git")
@@ -93,7 +96,8 @@ pub async fn execute(args: SplitArgs) -> Result<()> {
             };
 
             let diff = if let Some(tree) = head_tree {
-                repo.git().diff_tree_to_index(Some(&tree), Some(&index), None)?
+                repo.git()
+                    .diff_tree_to_index(Some(&tree), Some(&index), None)?
             } else {
                 repo.git().diff_tree_to_index(None, Some(&index), None)?
             };

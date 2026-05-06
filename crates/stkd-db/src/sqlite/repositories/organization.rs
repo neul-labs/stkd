@@ -49,23 +49,20 @@ impl OrganizationRepository for SqliteOrganizationRepository {
     }
 
     async fn get_by_id(&self, id: Uuid) -> DbResult<Option<Organization>> {
-        let row = sqlx::query_as::<_, OrganizationRow>(
-            "SELECT * FROM organizations WHERE id = ?",
-        )
-        .bind(id.to_string())
-        .fetch_optional(&self.pool)
-        .await?;
+        let row = sqlx::query_as::<_, OrganizationRow>("SELECT * FROM organizations WHERE id = ?")
+            .bind(id.to_string())
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(row.map(|r| r.into()))
     }
 
     async fn get_by_slug(&self, slug: &str) -> DbResult<Option<Organization>> {
-        let row = sqlx::query_as::<_, OrganizationRow>(
-            "SELECT * FROM organizations WHERE slug = ?",
-        )
-        .bind(slug)
-        .fetch_optional(&self.pool)
-        .await?;
+        let row =
+            sqlx::query_as::<_, OrganizationRow>("SELECT * FROM organizations WHERE slug = ?")
+                .bind(slug)
+                .fetch_optional(&self.pool)
+                .await?;
 
         Ok(row.map(|r| r.into()))
     }
@@ -114,22 +111,19 @@ impl OrganizationRepository for SqliteOrganizationRepository {
     }
 
     async fn list_all(&self) -> DbResult<Vec<Organization>> {
-        let rows = sqlx::query_as::<_, OrganizationRow>(
-            "SELECT * FROM organizations ORDER BY name",
-        )
-        .fetch_all(&self.pool)
-        .await?;
+        let rows =
+            sqlx::query_as::<_, OrganizationRow>("SELECT * FROM organizations ORDER BY name")
+                .fetch_all(&self.pool)
+                .await?;
 
         Ok(rows.into_iter().map(|r| r.into()).collect())
     }
 
     async fn slug_exists(&self, slug: &str) -> DbResult<bool> {
-        let count: (i64,) = sqlx::query_as(
-            "SELECT COUNT(*) FROM organizations WHERE slug = ?",
-        )
-        .bind(slug)
-        .fetch_one(&self.pool)
-        .await?;
+        let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM organizations WHERE slug = ?")
+            .bind(slug)
+            .fetch_one(&self.pool)
+            .await?;
 
         Ok(count.0 > 0)
     }

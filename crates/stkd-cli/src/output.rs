@@ -189,13 +189,11 @@ pub fn input(msg: &str) -> Option<String> {
     }
     use dialoguer::Input;
 
-    Input::new()
-        .with_prompt(msg)
-        .interact_text()
-        .ok()
+    Input::new().with_prompt(msg).interact_text().ok()
 }
 
 /// Create a spinner for an indeterminate operation.
+#[allow(dead_code)]
 pub fn spinner(msg: &str) -> ProgressBar {
     if is_json() || is_quiet() {
         return ProgressBar::hidden();

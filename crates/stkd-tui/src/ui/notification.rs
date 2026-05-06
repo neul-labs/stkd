@@ -33,9 +33,7 @@ pub fn draw(frame: &mut Frame, app: &App) {
             Span::styled(&notif.message, Style::default().fg(Color::White)),
         ]);
 
-        let paragraph = Paragraph::new(line)
-            .block(block)
-            .alignment(Alignment::Left);
+        let paragraph = Paragraph::new(line).block(block).alignment(Alignment::Left);
 
         frame.render_widget(paragraph, notif_area);
     }
@@ -44,10 +42,7 @@ pub fn draw(frame: &mut Frame, app: &App) {
 fn bottom_rect(percent_x: u16, height: u16, r: Rect) -> Rect {
     let popup_layout = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Min(1),
-            Constraint::Length(height),
-        ])
+        .constraints([Constraint::Min(1), Constraint::Length(height)])
         .split(r);
 
     Layout::default()

@@ -62,8 +62,7 @@ impl TestContext {
 
     /// Create a file and commit it.
     pub fn commit_file(&self, filename: &str, content: &str, message: &str) {
-        std::fs::write(self.path.join(filename), content)
-            .expect("Failed to write file");
+        std::fs::write(self.path.join(filename), content).expect("Failed to write file");
         run_git(&self.path, &["add", filename]);
         run_git(&self.path, &["commit", "-m", message]);
     }
@@ -162,7 +161,12 @@ pub fn run_stkd(dir: &Path, args: &[&str]) -> std::process::Output {
         .args(args)
         .current_dir(dir)
         .output()
-        .unwrap_or_else(|e| panic!("Failed to run stkd {:?}: {} (binary: {})", args, e, stkd_bin))
+        .unwrap_or_else(|e| {
+            panic!(
+                "Failed to run stkd {:?}: {} (binary: {})",
+                args, e, stkd_bin
+            )
+        })
 }
 
 /// Find the gt binary for testing.
@@ -218,7 +222,10 @@ pub fn run_stkd_failure(dir: &Path, args: &[&str]) -> std::process::Output {
 
     if output.status.success() {
         let stdout = String::from_utf8_lossy(&output.stdout);
-        panic!("stkd {:?} should have failed but succeeded:\n{}", args, stdout);
+        panic!(
+            "stkd {:?} should have failed but succeeded:\n{}",
+            args, stdout
+        );
     }
 
     output

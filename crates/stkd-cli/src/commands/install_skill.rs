@@ -74,18 +74,28 @@ Append `--json` to any command for structured machine-readable output.
 pub async fn execute(args: InstallSkillArgs) -> Result<()> {
     let home = std::env::var("HOME")
         .or_else(|_| std::env::var("USERPROFILE"))
-        .map_err(|_| anyhow::anyhow!("Could not determine home directory. Set HOME environment variable."))?;
-    let skills_dir = std::path::PathBuf::from(home).join(".claude").join("skills").join("stkd");
+        .map_err(|_| {
+            anyhow::anyhow!("Could not determine home directory. Set HOME environment variable.")
+        })?;
+    let skills_dir = std::path::PathBuf::from(home)
+        .join(".claude")
+        .join("skills")
+        .join("stkd");
 
     std::fs::create_dir_all(&skills_dir)?;
 
     let skill_path = skills_dir.join("SKILL.md");
     std::fs::write(&skill_path, SKILL_CONTENT)?;
 
-    output::success(&format!("Installed Claude skill to {}", skill_path.display()));
+    output::success(&format!(
+        "Installed Claude skill to {}",
+        skill_path.display()
+    ));
 
     if args.mcp {
-        output::info("MCP server installation not yet implemented. Use the stkd-mcp binary directly.");
+        output::info(
+            "MCP server installation not yet implemented. Use the stkd-mcp binary directly.",
+        );
     }
 
     Ok(())

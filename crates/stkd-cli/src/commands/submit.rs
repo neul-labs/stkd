@@ -67,15 +67,12 @@ pub struct SubmitArgs {
 
 pub async fn execute(args: SubmitArgs, json: bool) -> Result<()> {
     let repo = Repository::open(".")?;
-    let current = repo.current_branch()?.ok_or_else(|| {
-        anyhow::anyhow!("Not on a branch")
-    })?;
+    let current = repo
+        .current_branch()?
+        .ok_or_else(|| anyhow::anyhow!("Not on a branch"))?;
 
     if !repo.storage().is_tracked(&current) {
-        anyhow::bail!(
-            "Branch '{}' is not tracked. Run 'gt track' first.",
-            current
-        );
+        anyhow::bail!("Branch '{}' is not tracked. Run 'gt track' first.", current);
     }
 
     let opts = stkd_engine::SubmitOptions {
@@ -100,7 +97,12 @@ pub async fn execute(args: SubmitArgs, json: bool) -> Result<()> {
 
     if branches.is_empty() {
         if json {
-            println!("{}", serde_json::to_string_pretty(&serde_json::json!({"skipped": true, "reason": "No branches to submit" }))?);
+            println!(
+                "{}",
+                serde_json::to_string_pretty(
+                    &serde_json::json!({"skipped": true, "reason": "No branches to submit" })
+                )?
+            );
         } else {
             output::warn("No branches to submit");
         }
@@ -126,7 +128,12 @@ pub async fn execute(args: SubmitArgs, json: bool) -> Result<()> {
                     "action": if has_mr { if args.update { "update" } else { "skip" } } else { "create" }
                 })
             }).collect();
-            println!("{}", serde_json::to_string_pretty(&serde_json::json!({"dry_run": true, "branches": dry_run_info }))?);
+            println!(
+                "{}",
+                serde_json::to_string_pretty(
+                    &serde_json::json!({"dry_run": true, "branches": dry_run_info })
+                )?
+            );
             return Ok(());
         }
 
@@ -148,7 +155,11 @@ pub async fn execute(args: SubmitArgs, json: bool) -> Result<()> {
 
             let has_mr = info.as_ref().and_then(|i| i.merge_request_id).is_some();
             let mr_action = if has_mr {
-                if args.update { "Update MR" } else { "Skip (MR exists)" }
+                if args.update {
+                    "Update MR"
+                } else {
+                    "Skip (MR exists)"
+                }
             } else {
                 "Create MR"
             };
@@ -157,7 +168,13 @@ pub async fn execute(args: SubmitArgs, json: bool) -> Result<()> {
                 output::info(&format!("  {} Push {} to origin", output::ARROW, branch));
             }
             if !args.push_only {
-                output::info(&format!("  {} {} for {} -> {}", output::ARROW, mr_action, branch, base));
+                output::info(&format!(
+                    "  {} {} for {} -> {}",
+                    output::ARROW,
+                    mr_action,
+                    branch,
+                    base
+                ));
                 if !opts.reviewers.is_empty() {
                     output::info(&format!("       Reviewers: {}", opts.reviewers.join(", ")));
                 }
@@ -198,7 +215,12 @@ pub async fn execute(args: SubmitArgs, json: bool) -> Result<()> {
     // If push-only, we're done
     if args.push_only {
         if json {
-            println!("{}", serde_json::to_string_pretty(&serde_json::json!({"pushed": branches, "success": true }))?);
+            println!(
+                "{}",
+                serde_json::to_string_pretty(
+                    &serde_json::json!({"pushed": branches, "success": true })
+                )?
+            );
         } else {
             output::success("Push complete");
         }
@@ -209,7 +231,11 @@ pub async fn execute(args: SubmitArgs, json: bool) -> Result<()> {
     let ctx = stkd_engine::ProviderContext::from_repo(&repo).await?;
 
     if !json {
-        output::info(&format!("Repository: {} ({})", ctx.full_name(), ctx.provider_type));
+        output::info(&format!(
+            "Repository: {} ({})",
+            ctx.full_name(),
+            ctx.provider_type
+        ));
     }
 
     let result = stkd_engine::submit(&repo, opts, ctx.provider(), &ctx.repo_id).await?;
@@ -219,14 +245,24 @@ pub async fn execute(args: SubmitArgs, json: bool) -> Result<()> {
     } else {
         for created in &result.created {
             let draft_indicator = if created.draft { " (draft)" } else { "" };
-            output::success(&format!("Created MR #{}{} for {}", created.number, draft_indicator, created.branch));
+            output::success(&format!(
+                "Created MR #{}{} for {}",
+                created.number, draft_indicator, created.branch
+            ));
             output::info(&format!("     {}", created.url));
         }
         for updated in &result.updated {
-            output::success(&format!("Updated MR #{} for {}", updated.number, updated.branch));
+            output::success(&format!(
+                "Updated MR #{} for {}",
+                updated.number, updated.branch
+            ));
         }
         for skipped in &result.skipped {
-            output::info(&format!("  {} MR exists for {} (use --update to modify)", output::ARROW, skipped));
+            output::info(&format!(
+                "  {} MR exists for {} (use --update to modify)",
+                output::ARROW,
+                skipped
+            ));
         }
         output::success("Submit complete");
         output::hint("Run 'gt log' to see MR status");

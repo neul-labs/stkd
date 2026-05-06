@@ -15,7 +15,9 @@ pub struct TrackArgs {
 pub async fn execute(args: TrackArgs) -> Result<()> {
     let repo = Repository::open(".")?;
 
-    let branch = args.branch.or_else(|| repo.current_branch().ok().flatten())
+    let branch = args
+        .branch
+        .or_else(|| repo.current_branch().ok().flatten())
         .ok_or_else(|| anyhow::anyhow!("No branch specified and not on a branch"))?;
 
     let info = repo.track_branch(&branch)?;

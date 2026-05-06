@@ -2,7 +2,7 @@
 
 use anyhow::{Context, Result};
 use serde::Serialize;
-use stkd_core::config::{ProviderConfig, StackConfig};
+use stkd_core::config::{ProviderConfig, StackConfig, SubmitConfig, SyncConfig};
 use stkd_core::Repository;
 
 /// Options for the init operation.
@@ -53,8 +53,8 @@ pub fn detect_remote(repo: &git2::Repository) -> String {
 
 /// Initialize Stack in a repository.
 pub fn init(path: &str, opts: InitOptions) -> Result<InitResult> {
-    let git_repo = git2::Repository::open(path)
-        .context("Not a git repository. Run 'git init' first.")?;
+    let git_repo =
+        git2::Repository::open(path).context("Not a git repository. Run 'git init' first.")?;
 
     let trunk = opts.trunk.unwrap_or_else(|| detect_trunk(&git_repo));
     let remote = opts.remote.unwrap_or_else(|| detect_remote(&git_repo));
@@ -69,12 +69,20 @@ pub fn init(path: &str, opts: InitOptions) -> Result<InitResult> {
         None
     };
 
-    let mut config = StackConfig::default();
-    config.trunk = trunk.clone();
-    config.remote = remote.clone();
-    config.provider = provider_config.clone();
-    config.submit.draft = opts.draft_default;
-    config.sync.delete_merged = opts.delete_merged;
+    let config = StackConfig {
+        trunk: trunk.clone(),
+        remote: remote.clone(),
+        provider: provider_config.clone(),
+        submit: SubmitConfig {
+            draft: opts.draft_default,
+            ..Default::default()
+        },
+        sync: SyncConfig {
+            delete_merged: opts.delete_merged,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
 
     Repository::init_with_config(path, config)?;
 

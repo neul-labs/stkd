@@ -19,7 +19,10 @@ pub struct GitHubOAuth {
 impl GitHubOAuth {
     /// Create a new GitHub OAuth provider.
     pub fn new(config: OAuthProviderConfig, redirect_uri: String) -> Self {
-        Self { config, redirect_uri }
+        Self {
+            config,
+            redirect_uri,
+        }
     }
 
     /// Get the authorization URL.

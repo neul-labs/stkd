@@ -17,8 +17,7 @@ pub struct RepoInfo {
 impl RepoInfo {
     /// Parse from a git URL
     pub fn from_url(url: &str, remote: &str) -> Result<Self> {
-        let (owner, repo) = parse_github_url(url)
-            .context("Failed to parse GitHub URL")?;
+        let (owner, repo) = parse_github_url(url).context("Failed to parse GitHub URL")?;
 
         Ok(Self {
             owner,
@@ -34,11 +33,11 @@ impl RepoInfo {
 
     /// Detect from a git repository with specific remote
     pub fn from_repo_with_remote(repo: &Repository, remote_name: &str) -> Result<Self> {
-        let remote = repo.find_remote(remote_name)
+        let remote = repo
+            .find_remote(remote_name)
             .context(format!("Remote '{}' not found", remote_name))?;
 
-        let url = remote.url()
-            .context("Remote URL is not valid UTF-8")?;
+        let url = remote.url().context("Remote URL is not valid UTF-8")?;
 
         Self::from_url(url, remote_name)
     }

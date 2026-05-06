@@ -108,7 +108,10 @@ impl MergeRequest {
 
     /// Check if this MR is still open.
     pub fn is_open(&self) -> bool {
-        matches!(self.state, MergeRequestState::Open | MergeRequestState::Draft)
+        matches!(
+            self.state,
+            MergeRequestState::Open | MergeRequestState::Draft
+        )
     }
 
     /// Check if this MR has been merged.

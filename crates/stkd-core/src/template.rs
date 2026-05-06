@@ -55,7 +55,11 @@ impl StackTemplate {
     }
 
     /// Add a branch to the template
-    pub fn with_branch(mut self, suffix: impl Into<String>, description: impl Into<String>) -> Self {
+    pub fn with_branch(
+        mut self,
+        suffix: impl Into<String>,
+        description: impl Into<String>,
+    ) -> Self {
         self.branches.push(TemplateBranch {
             suffix: suffix.into(),
             description: description.into(),
@@ -82,16 +86,13 @@ impl StackTemplate {
         vec![
             StackTemplate::new("feature", "Single feature branch")
                 .with_branch("", "Main feature implementation"),
-
             StackTemplate::new("feature-tests", "Feature with tests branch")
                 .with_branch("", "Main feature implementation")
                 .with_branch("-tests", "Tests for the feature"),
-
             StackTemplate::new("refactor", "Three-stage refactor stack")
                 .with_branch("-prep", "Preparatory refactoring")
                 .with_branch("", "Main refactoring changes")
                 .with_branch("-cleanup", "Post-refactor cleanup"),
-
             StackTemplate::new("migration", "Database migration stack")
                 .with_branch("-schema", "Schema changes")
                 .with_branch("-data", "Data migration")

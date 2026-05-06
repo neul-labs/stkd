@@ -76,7 +76,10 @@ impl GitHubProvider {
     /// * `base_url` - The base URL of the GitHub Enterprise API
     pub fn with_base_url(auth: GitHubAuth, base_url: &str) -> ProviderResult<Self> {
         let mut headers = HeaderMap::new();
-        headers.insert(ACCEPT, HeaderValue::from_static("application/vnd.github+json"));
+        headers.insert(
+            ACCEPT,
+            HeaderValue::from_static("application/vnd.github+json"),
+        );
         headers.insert(USER_AGENT, HeaderValue::from_static("stkd-cli/0.1.0"));
         headers.insert(
             "X-GitHub-Api-Version",
@@ -111,7 +114,11 @@ impl GitHubProvider {
     }
 
     /// Make a POST request to the GitHub API.
-    async fn post<T: DeserializeOwned, B: Serialize>(&self, path: &str, body: &B) -> ProviderResult<T> {
+    async fn post<T: DeserializeOwned, B: Serialize>(
+        &self,
+        path: &str,
+        body: &B,
+    ) -> ProviderResult<T> {
         let url = format!("{}{}", self.base_url, path);
 
         let response = self
@@ -127,7 +134,11 @@ impl GitHubProvider {
     }
 
     /// Make a PATCH request to the GitHub API.
-    async fn patch<T: DeserializeOwned, B: Serialize>(&self, path: &str, body: &B) -> ProviderResult<T> {
+    async fn patch<T: DeserializeOwned, B: Serialize>(
+        &self,
+        path: &str,
+        body: &B,
+    ) -> ProviderResult<T> {
         let url = format!("{}{}", self.base_url, path);
 
         let response = self
@@ -143,7 +154,11 @@ impl GitHubProvider {
     }
 
     /// Make a PUT request to the GitHub API.
-    async fn put<T: DeserializeOwned, B: Serialize>(&self, path: &str, body: &B) -> ProviderResult<T> {
+    async fn put<T: DeserializeOwned, B: Serialize>(
+        &self,
+        path: &str,
+        body: &B,
+    ) -> ProviderResult<T> {
         let url = format!("{}{}", self.base_url, path);
 
         let response = self
@@ -180,7 +195,10 @@ impl GitHubProvider {
     }
 
     /// Handle API response and parse errors.
-    async fn handle_response<T: DeserializeOwned>(&self, response: reqwest::Response) -> ProviderResult<T> {
+    async fn handle_response<T: DeserializeOwned>(
+        &self,
+        response: reqwest::Response,
+    ) -> ProviderResult<T> {
         let status = response.status();
 
         if status.is_success() {
@@ -208,7 +226,9 @@ impl GitHubProvider {
             404 => ProviderError::NotFound(body.to_string()),
             409 => ProviderError::MergeConflict(body.to_string()),
             422 => ProviderError::ValidationError(body.to_string()),
-            _ => ProviderError::ProviderSpecific(format!("GitHub API error ({}): {}", status, body)),
+            _ => {
+                ProviderError::ProviderSpecific(format!("GitHub API error ({}): {}", status, body))
+            }
         }
     }
 }
@@ -491,14 +511,34 @@ impl MergeRequestProvider for GitHubProvider {
 
         // Add labels if specified
         if !request.labels.is_empty() {
-            let labels_path = format!("/repos/{}/{}/issues/{}/labels", repo.owner, repo.name, mr.number);
-            let _ = self.post::<Vec<GhLabel>, _>(&labels_path, &GhLabelsRequest { labels: request.labels }).await;
+            let labels_path = format!(
+                "/repos/{}/{}/issues/{}/labels",
+                repo.owner, repo.name, mr.number
+            );
+            let _ = self
+                .post::<Vec<GhLabel>, _>(
+                    &labels_path,
+                    &GhLabelsRequest {
+                        labels: request.labels,
+                    },
+                )
+                .await;
         }
 
         // Request reviewers if specified
         if !request.reviewers.is_empty() {
-            let reviewers_path = format!("/repos/{}/{}/pulls/{}/requested_reviewers", repo.owner, repo.name, mr.number);
-            let _ = self.post::<serde_json::Value, _>(&reviewers_path, &GhReviewersRequest { reviewers: request.reviewers }).await;
+            let reviewers_path = format!(
+                "/repos/{}/{}/pulls/{}/requested_reviewers",
+                repo.owner, repo.name, mr.number
+            );
+            let _ = self
+                .post::<serde_json::Value, _>(
+                    &reviewers_path,
+                    &GhReviewersRequest {
+                        reviewers: request.reviewers,
+                    },
+                )
+                .await;
         }
 
         Ok(mr)
@@ -529,7 +569,9 @@ impl MergeRequestProvider for GitHubProvider {
         // Update labels if specified
         if let Some(labels) = update.labels {
             let labels_path = format!("/repos/{}/{}/issues/{}/labels", repo.owner, repo.name, id.0);
-            let _ = self.put::<Vec<GhLabel>, _>(&labels_path, &GhLabelsRequest { labels }).await;
+            let _ = self
+                .put::<Vec<GhLabel>, _>(&labels_path, &GhLabelsRequest { labels })
+                .await;
         }
 
         Ok(MergeRequest::from(pr))
@@ -592,9 +634,7 @@ impl MergeRequestProvider for GitHubProvider {
 
         // Filter by labels if specified
         if !filter.labels.is_empty() {
-            mrs.retain(|mr| {
-                filter.labels.iter().all(|l| mr.labels.contains(l))
-            });
+            mrs.retain(|mr| filter.labels.iter().all(|l| mr.labels.contains(l)));
         }
 
         Ok(mrs)
@@ -710,7 +750,10 @@ impl RepositoryProvider for GitHubProvider {
         // Handle HTTPS URLs: https://github.com/owner/repo.git
         if url.contains("github.com") {
             if let Ok(parsed) = url::Url::parse(url) {
-                let path = parsed.path().trim_start_matches('/').trim_end_matches(".git");
+                let path = parsed
+                    .path()
+                    .trim_start_matches('/')
+                    .trim_end_matches(".git");
                 let parts: Vec<&str> = path.split('/').collect();
                 if parts.len() == 2 {
                     return Some(RepoId::new(parts[0], parts[1]));
@@ -729,7 +772,10 @@ impl PipelineProvider for GitHubProvider {
         repo: &RepoId,
         ref_name: &str,
     ) -> ProviderResult<Option<Pipeline>> {
-        let path = format!("/repos/{}/{}/commits/{}/check-runs", repo.owner, repo.name, ref_name);
+        let path = format!(
+            "/repos/{}/{}/commits/{}/check-runs",
+            repo.owner, repo.name, ref_name
+        );
 
         match self.get::<GhCheckRunsResponse>(&path).await {
             Ok(response) if response.total_count > 0 => {
@@ -738,14 +784,19 @@ impl PipelineProvider for GitHubProvider {
                 let mut jobs = Vec::new();
 
                 for run in response.check_runs {
-                    let status = check_status_to_pipeline_status(&run.status, run.conclusion.as_deref());
+                    let status =
+                        check_status_to_pipeline_status(&run.status, run.conclusion.as_deref());
 
                     // Overall status: Failed > Running > Pending > Success
                     if status == PipelineStatus::Failed {
                         overall_status = PipelineStatus::Failed;
-                    } else if status == PipelineStatus::Running && overall_status != PipelineStatus::Failed {
+                    } else if status == PipelineStatus::Running
+                        && overall_status != PipelineStatus::Failed
+                    {
                         overall_status = PipelineStatus::Running;
-                    } else if status == PipelineStatus::Pending && overall_status == PipelineStatus::Success {
+                    } else if status == PipelineStatus::Pending
+                        && overall_status == PipelineStatus::Success
+                    {
                         overall_status = PipelineStatus::Pending;
                     }
 
@@ -762,7 +813,7 @@ impl PipelineProvider for GitHubProvider {
                     status: overall_status,
                     web_url: None,
                     ref_name: ref_name.to_string(),
-                    sha: String::new(), // Would need another API call
+                    sha: String::new(),     // Would need another API call
                     created_at: Utc::now(), // Placeholder
                     jobs,
                 }))
@@ -815,7 +866,10 @@ impl ApprovalProvider for GitHubProvider {
         repo: &RepoId,
         mr_id: MergeRequestId,
     ) -> ProviderResult<Vec<Review>> {
-        let path = format!("/repos/{}/{}/pulls/{}/reviews", repo.owner, repo.name, mr_id.0);
+        let path = format!(
+            "/repos/{}/{}/pulls/{}/reviews",
+            repo.owner, repo.name, mr_id.0
+        );
         let reviews: Vec<GhReview> = self.get(&path).await?;
         Ok(reviews.into_iter().map(Review::from).collect())
     }
@@ -826,7 +880,10 @@ impl ApprovalProvider for GitHubProvider {
         mr_id: MergeRequestId,
         reviewers: Vec<String>,
     ) -> ProviderResult<()> {
-        let path = format!("/repos/{}/{}/pulls/{}/requested_reviewers", repo.owner, repo.name, mr_id.0);
+        let path = format!(
+            "/repos/{}/{}/pulls/{}/requested_reviewers",
+            repo.owner, repo.name, mr_id.0
+        );
         let _: serde_json::Value = self.post(&path, &GhReviewersRequest { reviewers }).await?;
         Ok(())
     }
@@ -847,8 +904,12 @@ impl ApprovalProvider for GitHubProvider {
         }
 
         // Determine overall status
-        let has_changes_requested = latest_by_user.values().any(|s| *s == ApprovalState::ChangesRequested);
-        let has_approval = latest_by_user.values().any(|s| *s == ApprovalState::Approved);
+        let has_changes_requested = latest_by_user
+            .values()
+            .any(|s| *s == ApprovalState::ChangesRequested);
+        let has_approval = latest_by_user
+            .values()
+            .any(|s| *s == ApprovalState::Approved);
 
         if has_changes_requested {
             Ok(ApprovalState::ChangesRequested)
@@ -886,7 +947,10 @@ impl LabelProvider for GitHubProvider {
         mr_id: MergeRequestId,
         labels: Vec<String>,
     ) -> ProviderResult<()> {
-        let path = format!("/repos/{}/{}/issues/{}/labels", repo.owner, repo.name, mr_id.0);
+        let path = format!(
+            "/repos/{}/{}/issues/{}/labels",
+            repo.owner, repo.name, mr_id.0
+        );
         let _: Vec<GhLabel> = self.post(&path, &GhLabelsRequest { labels }).await?;
         Ok(())
     }
@@ -898,7 +962,10 @@ impl LabelProvider for GitHubProvider {
         labels: Vec<String>,
     ) -> ProviderResult<()> {
         for label in labels {
-            let path = format!("/repos/{}/{}/issues/{}/labels/{}", repo.owner, repo.name, mr_id.0, label);
+            let path = format!(
+                "/repos/{}/{}/issues/{}/labels/{}",
+                repo.owner, repo.name, mr_id.0, label
+            );
             let _ = self.delete(&path).await;
         }
         Ok(())
@@ -910,7 +977,10 @@ impl LabelProvider for GitHubProvider {
         mr_id: MergeRequestId,
         labels: Vec<String>,
     ) -> ProviderResult<()> {
-        let path = format!("/repos/{}/{}/issues/{}/labels", repo.owner, repo.name, mr_id.0);
+        let path = format!(
+            "/repos/{}/{}/issues/{}/labels",
+            repo.owner, repo.name, mr_id.0
+        );
         let _: Vec<GhLabel> = self.put(&path, &GhLabelsRequest { labels }).await?;
         Ok(())
     }
@@ -929,7 +999,10 @@ impl MilestoneProvider for GitHubProvider {
             None => "?state=all",
         };
 
-        let path = format!("/repos/{}/{}/milestones{}", repo.owner, repo.name, state_param);
+        let path = format!(
+            "/repos/{}/{}/milestones{}",
+            repo.owner, repo.name, state_param
+        );
         let milestones: Vec<GhMilestone> = self.get(&path).await?;
         Ok(milestones.into_iter().map(Milestone::from).collect())
     }
@@ -1009,10 +1082,7 @@ impl BranchProtectionProvider for GitHubProvider {
     ) -> ProviderResult<Option<BranchProtection>> {
         let url = format!(
             "{}/repos/{}/{}/branches/{}/protection",
-            self.base_url,
-            repo.owner,
-            repo.name,
-            branch
+            self.base_url, repo.owner, repo.name, branch
         );
 
         // GitHub returns 404 if branch is not protected
@@ -1021,17 +1091,13 @@ impl BranchProtectionProvider for GitHubProvider {
                 let protection = BranchProtection {
                     pattern: branch.to_string(),
                     is_protected: true,
-                    require_pull_request: json
-                        .get("required_pull_request_reviews")
-                        .is_some(),
+                    require_pull_request: json.get("required_pull_request_reviews").is_some(),
                     required_approvals: json
                         .get("required_pull_request_reviews")
                         .and_then(|r| r.get("required_approving_review_count"))
                         .and_then(|c| c.as_u64())
                         .unwrap_or(0) as u32,
-                    require_status_checks: json
-                        .get("required_status_checks")
-                        .is_some(),
+                    require_status_checks: json.get("required_status_checks").is_some(),
                     require_linear_history: json
                         .get("required_linear_history")
                         .and_then(|r| r.get("enabled"))
@@ -1086,7 +1152,11 @@ mod tests {
     fn test_parse_remote_url_invalid() {
         let provider = GitHubProvider::new("test").unwrap();
 
-        assert!(provider.parse_remote_url("git@gitlab.com:owner/repo.git").is_none());
-        assert!(provider.parse_remote_url("https://gitlab.com/owner/repo").is_none());
+        assert!(provider
+            .parse_remote_url("git@gitlab.com:owner/repo.git")
+            .is_none());
+        assert!(provider
+            .parse_remote_url("https://gitlab.com/owner/repo")
+            .is_none());
     }
 }

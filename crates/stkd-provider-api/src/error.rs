@@ -102,7 +102,10 @@ mod tests {
     #[test]
     fn test_retryable_errors() {
         assert!(ProviderError::NetworkError("timeout".into()).is_retryable());
-        assert!(ProviderError::RateLimited { retry_after: Some(60) }.is_retryable());
+        assert!(ProviderError::RateLimited {
+            retry_after: Some(60)
+        }
+        .is_retryable());
         assert!(!ProviderError::NotFound("repo".into()).is_retryable());
     }
 

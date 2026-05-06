@@ -39,7 +39,10 @@ pub async fn execute(args: ConfigArgs) -> Result<()> {
 
         // Version info
         println!("{}", "Version".dimmed());
-        println!("  version: {} (current: {})", config.version, CONFIG_VERSION);
+        println!(
+            "  version: {} (current: {})",
+            config.version, CONFIG_VERSION
+        );
         println!();
 
         // Core settings
@@ -111,14 +114,17 @@ pub async fn execute(args: ConfigArgs) -> Result<()> {
             "submit.draft" => config.submit.draft.to_string(),
             "submit.auto_title" => config.submit.auto_title.to_string(),
             "sync.delete_merged" => config.sync.delete_merged.to_string(),
-            "provider.type" => config.provider
+            "provider.type" => config
+                .provider
                 .as_ref()
                 .map(|p| p.provider_type.to_string())
                 .unwrap_or_else(|| "auto".to_string()),
-            "provider.owner" => config.effective_provider()
+            "provider.owner" => config
+                .effective_provider()
                 .and_then(|p| p.owner)
                 .unwrap_or_default(),
-            "provider.repo" => config.effective_provider()
+            "provider.repo" => config
+                .effective_provider()
                 .and_then(|p| p.repo)
                 .unwrap_or_default(),
             _ => {

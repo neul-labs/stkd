@@ -96,13 +96,25 @@ impl HistoryEntry {
             HistoryEntry::DeleteBranch { branch, .. } => {
                 format!("Delete branch '{}'", branch)
             }
-            HistoryEntry::RenameBranch { old_name, new_name, .. } => {
+            HistoryEntry::RenameBranch {
+                old_name, new_name, ..
+            } => {
                 format!("Rename '{}' to '{}'", old_name, new_name)
             }
-            HistoryEntry::Reparent { branch, old_parent, new_parent, .. } => {
-                format!("Move '{}' from '{}' to '{}'", branch, old_parent, new_parent)
+            HistoryEntry::Reparent {
+                branch,
+                old_parent,
+                new_parent,
+                ..
+            } => {
+                format!(
+                    "Move '{}' from '{}' to '{}'",
+                    branch, old_parent, new_parent
+                )
             }
-            HistoryEntry::SetMergeRequest { branch, new_mr_id, .. } => {
+            HistoryEntry::SetMergeRequest {
+                branch, new_mr_id, ..
+            } => {
                 format!("Associate MR #{} with '{}'", new_mr_id, branch)
             }
         }

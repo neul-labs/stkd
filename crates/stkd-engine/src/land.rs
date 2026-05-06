@@ -45,7 +45,10 @@ pub fn parse_merge_method(method: &str) -> Result<MergeMethod> {
         "squash" => Ok(MergeMethod::Squash),
         "rebase" => Ok(MergeMethod::Rebase),
         "ff" | "fast-forward" => Ok(MergeMethod::FastForward),
-        _ => anyhow::bail!("Invalid merge method: {}. Use 'merge', 'squash', 'rebase', or 'ff'.", method),
+        _ => anyhow::bail!(
+            "Invalid merge method: {}. Use 'merge', 'squash', 'rebase', or 'ff'.",
+            method
+        ),
     }
 }
 
@@ -58,9 +61,9 @@ pub async fn land(
 ) -> Result<LandResult> {
     let mut result = LandResult::default();
 
-    let current = repo.current_branch()?.ok_or_else(|| {
-        anyhow::anyhow!("Not on a branch")
-    })?;
+    let current = repo
+        .current_branch()?
+        .ok_or_else(|| anyhow::anyhow!("Not on a branch"))?;
 
     if !repo.storage().is_tracked(&current) {
         anyhow::bail!("Branch '{}' is not tracked. Run 'gt track' first.", current);
@@ -68,12 +71,16 @@ pub async fn land(
 
     let graph = repo.load_graph()?;
 
-    let info = repo.storage()
+    let info = repo
+        .storage()
         .load_branch(&current)?
         .context("Branch info not found")?;
 
     let mr_number = info.merge_request_id.ok_or_else(|| {
-        anyhow::anyhow!("No MR found for branch '{}'. Run 'gt submit' first.", current)
+        anyhow::anyhow!(
+            "No MR found for branch '{}'. Run 'gt submit' first.",
+            current
+        )
     })?;
 
     let merge_method = parse_merge_method(&opts.method)?;
@@ -109,7 +116,12 @@ pub async fn land(
     }
 
     for (branch, mr_num) in &branches_to_land {
-        match with_retry(|| provider.merge_mr(repo_id, (*mr_num).into(), merge_method), DEFAULT_MAX_RETRIES).await {
+        match with_retry(
+            || provider.merge_mr(repo_id, (*mr_num).into(), merge_method),
+            DEFAULT_MAX_RETRIES,
+        )
+        .await
+        {
             Ok(merge_result) => {
                 result.landed.push(LandedBranch {
                     branch: branch.clone(),

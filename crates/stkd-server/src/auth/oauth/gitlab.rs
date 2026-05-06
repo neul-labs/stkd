@@ -16,8 +16,15 @@ pub struct GitLabOAuth {
 impl GitLabOAuth {
     /// Create a new GitLab OAuth provider.
     pub fn new(config: OAuthProviderConfig, redirect_uri: String) -> Self {
-        let host = config.host.clone().unwrap_or_else(|| "gitlab.com".to_string());
-        Self { config, redirect_uri, host }
+        let host = config
+            .host
+            .clone()
+            .unwrap_or_else(|| "gitlab.com".to_string());
+        Self {
+            config,
+            redirect_uri,
+            host,
+        }
     }
 
     fn auth_url(&self) -> String {
@@ -65,7 +72,7 @@ impl GitLabOAuth {
 
         let client = reqwest::Client::new();
         let response: TokenResponse = client
-            .post(&self.token_url())
+            .post(self.token_url())
             .json(&TokenRequest {
                 client_id: self.config.client_id.clone(),
                 client_secret: self.config.client_secret.clone(),
@@ -100,7 +107,7 @@ impl GitLabOAuth {
 
         let client = reqwest::Client::new();
         let user: GitLabUser = client
-            .get(&self.user_url())
+            .get(self.user_url())
             .header("Authorization", format!("Bearer {}", access_token))
             .send()
             .await

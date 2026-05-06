@@ -68,9 +68,12 @@ pub async fn execute(args: StatusArgs, json: bool) -> Result<()> {
         Some(b) => b,
         None => {
             if json {
-                println!("{}", serde_json::to_string_pretty(
-                    &serde_json::json!({ "error": "Not on a branch (detached HEAD)" })
-                )?);
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(
+                        &serde_json::json!({ "error": "Not on a branch (detached HEAD)" })
+                    )?
+                );
             } else {
                 output::warn("Not on a branch (detached HEAD)");
             }
@@ -120,20 +123,32 @@ pub async fn execute(args: StatusArgs, json: bool) -> Result<()> {
         Some(StackPositionJson {
             position: current_idx + 1,
             total: stack.len(),
-            below: if current_idx > 0 { Some(stack[current_idx - 1].to_string()) } else { None },
-            above: if current_idx < stack.len() - 1 { Some(stack[current_idx + 1].to_string()) } else { None },
+            below: if current_idx > 0 {
+                Some(stack[current_idx - 1].to_string())
+            } else {
+                None
+            },
+            above: if current_idx < stack.len() - 1 {
+                Some(stack[current_idx + 1].to_string())
+            } else {
+                None
+            },
         })
     } else {
         None
     };
 
-    let children: Vec<ChildJson> = graph.children(&current).into_iter().map(|child| {
-        let child_info = repo.storage().load_branch(child).ok().flatten();
-        ChildJson {
-            name: child.to_string(),
-            mr_number: child_info.as_ref().and_then(|i| i.merge_request_id),
-        }
-    }).collect();
+    let children: Vec<ChildJson> = graph
+        .children(&current)
+        .into_iter()
+        .map(|child| {
+            let child_info = repo.storage().load_branch(child).ok().flatten();
+            ChildJson {
+                name: child.to_string(),
+                mr_number: child_info.as_ref().and_then(|i| i.merge_request_id),
+            }
+        })
+        .collect();
 
     let (wt_clean, wt_staged, wt_modified, wt_untracked) = get_working_tree_status(&repo)?;
 
@@ -184,7 +199,10 @@ pub async fn execute(args: StatusArgs, json: bool) -> Result<()> {
         }
         println!("  State: {}", mr.state);
         if let Some(m) = mr.mergeable {
-            println!("  Mergeable: {}", if m { "Yes".green() } else { "No".red() });
+            println!(
+                "  Mergeable: {}",
+                if m { "Yes".green() } else { "No".red() }
+            );
         }
         if !mr.labels.is_empty() {
             println!("  Labels: {}", mr.labels.join(", "));
@@ -212,7 +230,8 @@ pub async fn execute(args: StatusArgs, json: bool) -> Result<()> {
         println!();
         println!("{}", "Children".bold());
         for child in &children {
-            let mr_str = child.mr_number
+            let mr_str = child
+                .mr_number
                 .map(|n| format!(" #{}", n).cyan().to_string())
                 .unwrap_or_default();
             println!("  {} {}{}", output::ARROW, child.name, mr_str);
@@ -252,7 +271,12 @@ fn get_working_tree_status(repo: &Repository) -> Result<(bool, usize, usize, usi
     Ok((false, staged, modified, untracked))
 }
 
-fn show_working_tree_status_human(clean: bool, staged: usize, modified: usize, untracked: usize) -> Result<()> {
+fn show_working_tree_status_human(
+    clean: bool,
+    staged: usize,
+    modified: usize,
+    untracked: usize,
+) -> Result<()> {
     println!("{}", "Working Tree".bold());
 
     if clean {

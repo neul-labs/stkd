@@ -102,11 +102,8 @@ async fn create_org(
     state.db().organizations().create(&org).await?;
 
     // Add creator as owner
-    let membership = stkd_db::Membership::new(
-        org.id,
-        auth_user.user_id,
-        stkd_db::MembershipRole::Owner,
-    );
+    let membership =
+        stkd_db::Membership::new(org.id, auth_user.user_id, stkd_db::MembershipRole::Owner);
     state.db().memberships().add(&membership).await?;
 
     Ok(Json(OrgResponse {
@@ -241,8 +238,15 @@ async fn list_members(
         .ok_or_else(|| ApiError::NotFound("Organization not found".to_string()))?;
 
     // Check membership
-    if !state.db().memberships().is_member(org.id, auth_user.user_id).await? {
-        return Err(ApiError::Forbidden("Not a member of this organization".to_string()));
+    if !state
+        .db()
+        .memberships()
+        .is_member(org.id, auth_user.user_id)
+        .await?
+    {
+        return Err(ApiError::Forbidden(
+            "Not a member of this organization".to_string(),
+        ));
     }
 
     let members = state.db().memberships().list_members(org.id).await?;

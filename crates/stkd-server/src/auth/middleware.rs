@@ -23,7 +23,10 @@ pub struct AuthUser {
 impl FromRequestParts<AppState> for AuthUser {
     type Rejection = ApiError;
 
-    async fn from_request_parts(parts: &mut Parts, state: &AppState) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &AppState,
+    ) -> Result<Self, Self::Rejection> {
         // Extract authorization header
         let auth_header = parts
             .headers
@@ -37,10 +40,8 @@ impl FromRequestParts<AppState> for AuthUser {
             .ok_or_else(|| ApiError::Unauthorized("Invalid authorization format".to_string()))?;
 
         // Verify token
-        let jwt_manager = JwtManager::new(
-            &state.config().jwt_secret,
-            state.config().jwt_expiry_days,
-        );
+        let jwt_manager =
+            JwtManager::new(&state.config().jwt_secret, state.config().jwt_expiry_days);
         let claims = jwt_manager.verify_token(token)?;
 
         // Verify session is still valid
@@ -70,7 +71,10 @@ pub struct OptionalAuthUser(pub Option<AuthUser>);
 impl FromRequestParts<AppState> for OptionalAuthUser {
     type Rejection = (StatusCode, &'static str);
 
-    async fn from_request_parts(parts: &mut Parts, state: &AppState) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &AppState,
+    ) -> Result<Self, Self::Rejection> {
         match AuthUser::from_request_parts(parts, state).await {
             Ok(user) => Ok(OptionalAuthUser(Some(user))),
             Err(_) => Ok(OptionalAuthUser(None)),

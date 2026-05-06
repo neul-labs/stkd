@@ -93,6 +93,7 @@ pub struct App {
 }
 
 #[derive(Debug, Clone)]
+#[allow(clippy::large_enum_variant)]
 pub enum AppMessage {
     MrFetched(u64, MergeRequest),
     MrFetchFailed(u64, String),
@@ -277,7 +278,10 @@ impl App {
 
         if self.show_help {
             if let Event::Key(key) = event {
-                if matches!(key.code, KeyCode::Char('?') | KeyCode::Esc | KeyCode::Char('q')) {
+                if matches!(
+                    key.code,
+                    KeyCode::Char('?') | KeyCode::Esc | KeyCode::Char('q')
+                ) {
                     self.show_help = false;
                 }
             }
@@ -367,21 +371,30 @@ impl App {
                 if let Ok(branch) = self.repo.down(1) {
                     self.current_branch = branch;
                     self.refresh_stacks()?;
-                    self.show_notification(format!("Moved down to '{}'", self.current_branch), false);
+                    self.show_notification(
+                        format!("Moved down to '{}'", self.current_branch),
+                        false,
+                    );
                 }
             }
             KeyCode::Char('t') => {
                 if let Ok(branch) = self.repo.top() {
                     self.current_branch = branch;
                     self.refresh_stacks()?;
-                    self.show_notification(format!("Moved to top '{}'", self.current_branch), false);
+                    self.show_notification(
+                        format!("Moved to top '{}'", self.current_branch),
+                        false,
+                    );
                 }
             }
             KeyCode::Char('b') => {
                 if let Ok(branch) = self.repo.bottom() {
                     self.current_branch = branch;
                     self.refresh_stacks()?;
-                    self.show_notification(format!("Moved to bottom '{}'", self.current_branch), false);
+                    self.show_notification(
+                        format!("Moved to bottom '{}'", self.current_branch),
+                        false,
+                    );
                 }
             }
             _ => {}
@@ -399,50 +412,66 @@ impl App {
                 _ => {
                     if let Some(modal) = self.modal.take() {
                         match modal {
-                            Modal::Input { title, mut value, on_submit } => {
-                                match key.code {
-                                    KeyCode::Enter => {
-                                        match on_submit {
-                                            InputAction::CreateBranch => {
-                                                if !value.is_empty() {
-                                                    self.create_branch(&value).await?;
-                                                }
-                                            }
+                            Modal::Input {
+                                title,
+                                mut value,
+                                on_submit,
+                            } => match key.code {
+                                KeyCode::Enter => match on_submit {
+                                    InputAction::CreateBranch => {
+                                        if !value.is_empty() {
+                                            self.create_branch(&value).await?;
                                         }
                                     }
-                                    KeyCode::Backspace => {
-                                        value.pop();
-                                        self.modal = Some(Modal::Input { title, value, on_submit });
-                                    }
-                                    KeyCode::Char(c) => {
-                                        value.push(c);
-                                        self.modal = Some(Modal::Input { title, value, on_submit });
-                                    }
-                                    _ => {
-                                        self.modal = Some(Modal::Input { title, value, on_submit });
-                                    }
+                                },
+                                KeyCode::Backspace => {
+                                    value.pop();
+                                    self.modal = Some(Modal::Input {
+                                        title,
+                                        value,
+                                        on_submit,
+                                    });
                                 }
-                            }
-                            Modal::Confirm { title, message, on_confirm } => {
-                                match key.code {
-                                    KeyCode::Char('y') | KeyCode::Enter => {
-                                        match on_confirm {
-                                            ConfirmAction::DeleteBranch(branch) => {
-                                                self.delete_branch(&branch).await?;
-                                            }
-                                            ConfirmAction::LandBranch(branch) => {
-                                                self.land_branch(&branch).await?;
-                                            }
-                                            ConfirmAction::LandStack => {
-                                                self.land_stack().await?;
-                                            }
-                                        }
-                                    }
-                                    _ => {
-                                        self.modal = Some(Modal::Confirm { title, message, on_confirm });
-                                    }
+                                KeyCode::Char(c) => {
+                                    value.push(c);
+                                    self.modal = Some(Modal::Input {
+                                        title,
+                                        value,
+                                        on_submit,
+                                    });
                                 }
-                            }
+                                _ => {
+                                    self.modal = Some(Modal::Input {
+                                        title,
+                                        value,
+                                        on_submit,
+                                    });
+                                }
+                            },
+                            Modal::Confirm {
+                                title,
+                                message,
+                                on_confirm,
+                            } => match key.code {
+                                KeyCode::Char('y') | KeyCode::Enter => match on_confirm {
+                                    ConfirmAction::DeleteBranch(branch) => {
+                                        self.delete_branch(&branch).await?;
+                                    }
+                                    ConfirmAction::LandBranch(branch) => {
+                                        self.land_branch(&branch).await?;
+                                    }
+                                    ConfirmAction::LandStack => {
+                                        self.land_stack().await?;
+                                    }
+                                },
+                                _ => {
+                                    self.modal = Some(Modal::Confirm {
+                                        title,
+                                        message,
+                                        on_confirm,
+                                    });
+                                }
+                            },
                             Modal::Progress { title, message } => {
                                 self.modal = Some(Modal::Progress { title, message });
                             }
@@ -539,7 +568,9 @@ impl App {
             let repo = match Repository::open(".") {
                 Ok(r) => r,
                 Err(e) => {
-                    let _ = tx.blocking_send(AppMessage::ActionComplete(ActionResult::Error(format!("{:#}", e))));
+                    let _ = tx.blocking_send(AppMessage::ActionComplete(ActionResult::Error(
+                        format!("{:#}", e),
+                    )));
                     return;
                 }
             };
@@ -547,23 +578,33 @@ impl App {
             let ctx = match rt.block_on(stkd_engine::ProviderContext::from_repo(&repo)) {
                 Ok(c) => c,
                 Err(e) => {
-                    let _ = tx.blocking_send(AppMessage::ActionComplete(ActionResult::Error(format!("Provider error: {:#}", e))));
+                    let _ = tx.blocking_send(AppMessage::ActionComplete(ActionResult::Error(
+                        format!("Provider error: {:#}", e),
+                    )));
                     return;
                 }
             };
 
             let opts = stkd_engine::SubmitOptions::default();
-            match rt.block_on(stkd_engine::submit(&repo, opts, ctx.provider(), &ctx.repo_id)) {
+            match rt.block_on(stkd_engine::submit(
+                &repo,
+                opts,
+                ctx.provider(),
+                &ctx.repo_id,
+            )) {
                 Ok(result) => {
                     let msg = format!(
                         "Submitted {} MRs, updated {} MRs",
                         result.created.len(),
                         result.updated.len()
                     );
-                    let _ = tx.blocking_send(AppMessage::ActionComplete(ActionResult::Success(msg)));
+                    let _ =
+                        tx.blocking_send(AppMessage::ActionComplete(ActionResult::Success(msg)));
                 }
                 Err(e) => {
-                    let _ = tx.blocking_send(AppMessage::ActionComplete(ActionResult::Error(format!("{:#}", e))));
+                    let _ = tx.blocking_send(AppMessage::ActionComplete(ActionResult::Error(
+                        format!("{:#}", e),
+                    )));
                 }
             }
         });
@@ -580,19 +621,25 @@ impl App {
             let repo = match Repository::open(".") {
                 Ok(r) => r,
                 Err(e) => {
-                    let _ = tx.blocking_send(AppMessage::ActionComplete(ActionResult::Error(format!("{:#}", e))));
+                    let _ = tx.blocking_send(AppMessage::ActionComplete(ActionResult::Error(
+                        format!("{:#}", e),
+                    )));
                     return;
                 }
             };
 
-            let provider = match rt.block_on(stkd_engine::ProviderContext::from_repo(&repo)) {
-                Ok(ctx) => Some(ctx),
-                Err(_) => None,
-            };
+            let provider = rt
+                .block_on(stkd_engine::ProviderContext::from_repo(&repo))
+                .ok();
 
             let opts = stkd_engine::SyncOptions::default();
             let result = if let Some(ref ctx) = provider {
-                rt.block_on(stkd_engine::sync(&repo, opts, Some(ctx.provider()), Some(&ctx.repo_id)))
+                rt.block_on(stkd_engine::sync(
+                    &repo,
+                    opts,
+                    Some(ctx.provider()),
+                    Some(&ctx.repo_id),
+                ))
             } else {
                 rt.block_on(stkd_engine::sync(&repo, opts, None, None))
             };
@@ -604,10 +651,13 @@ impl App {
                         result.deleted_branches.len(),
                         result.restacked.len()
                     );
-                    let _ = tx.blocking_send(AppMessage::ActionComplete(ActionResult::Success(msg)));
+                    let _ =
+                        tx.blocking_send(AppMessage::ActionComplete(ActionResult::Success(msg)));
                 }
                 Err(e) => {
-                    let _ = tx.blocking_send(AppMessage::ActionComplete(ActionResult::Error(format!("{:#}", e))));
+                    let _ = tx.blocking_send(AppMessage::ActionComplete(ActionResult::Error(
+                        format!("{:#}", e),
+                    )));
                 }
             }
         });
@@ -623,7 +673,9 @@ impl App {
             let repo = match Repository::open(".") {
                 Ok(r) => r,
                 Err(e) => {
-                    let _ = tx.blocking_send(AppMessage::ActionComplete(ActionResult::Error(format!("{:#}", e))));
+                    let _ = tx.blocking_send(AppMessage::ActionComplete(ActionResult::Error(
+                        format!("{:#}", e),
+                    )));
                     return;
                 }
             };
@@ -632,10 +684,13 @@ impl App {
             match stkd_engine::restack(&repo, opts) {
                 Ok(result) => {
                     let msg = format!("Restacked {} branches", result.restacked.len());
-                    let _ = tx.blocking_send(AppMessage::ActionComplete(ActionResult::Success(msg)));
+                    let _ =
+                        tx.blocking_send(AppMessage::ActionComplete(ActionResult::Success(msg)));
                 }
                 Err(e) => {
-                    let _ = tx.blocking_send(AppMessage::ActionComplete(ActionResult::Error(format!("{:#}", e))));
+                    let _ = tx.blocking_send(AppMessage::ActionComplete(ActionResult::Error(
+                        format!("{:#}", e),
+                    )));
                 }
             }
         });
@@ -644,7 +699,10 @@ impl App {
     }
 
     async fn land_branch(&mut self, branch: &str) -> Result<()> {
-        self.show_notification(format!("Land branch '{}' not yet implemented in TUI", branch), true);
+        self.show_notification(
+            format!("Land branch '{}' not yet implemented in TUI", branch),
+            true,
+        );
         Ok(())
     }
 
@@ -686,7 +744,9 @@ impl App {
                         let _ = rt.block_on(tx.send(AppMessage::MrFetched(mr_num, mr)));
                     }
                     Err(e) => {
-                        let _ = rt.block_on(tx.send(AppMessage::MrFetchFailed(mr_num, format!("{:#}", e))));
+                        let _ = rt.block_on(
+                            tx.send(AppMessage::MrFetchFailed(mr_num, format!("{:#}", e))),
+                        );
                     }
                 }
             }

@@ -58,10 +58,12 @@ impl ServerConfig {
     /// - `JWT_EXPIRY_DAYS`: Token expiry in days (default: 7)
     /// - `STACK_DEV_MODE`: Set to "1" to allow insecure defaults for development
     pub fn from_env() -> Result<Self> {
-        let database = DatabaseConfig::from_env()
-            .context("Failed to load database configuration")?;
+        let database =
+            DatabaseConfig::from_env().context("Failed to load database configuration")?;
 
-        let dev_mode = std::env::var("STACK_DEV_MODE").map(|v| v == "1").unwrap_or(false);
+        let dev_mode = std::env::var("STACK_DEV_MODE")
+            .map(|v| v == "1")
+            .unwrap_or(false);
 
         let jwt_secret = match std::env::var("JWT_SECRET") {
             Ok(secret) => {

@@ -42,7 +42,10 @@ pub async fn execute(args: CreateArgs, json: bool) -> Result<()> {
 
         if json {
             let names: Vec<String> = templates.into_iter().map(|t| t.name).collect();
-            println!("{}", serde_json::to_string_pretty(&serde_json::json!({ "templates": names }))?);
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&serde_json::json!({ "templates": names }))?
+            );
         } else {
             if templates.is_empty() {
                 output::info("No templates available");
@@ -85,7 +88,10 @@ pub async fn execute(args: CreateArgs, json: bool) -> Result<()> {
         let branch_names = template.generate_names(&args.name);
 
         if branch_names.is_empty() {
-            return Err(anyhow::anyhow!("Template '{}' has no branches defined", template_name));
+            return Err(anyhow::anyhow!(
+                "Template '{}' has no branches defined",
+                template_name
+            ));
         }
 
         let mut created = Vec::new();
@@ -98,7 +104,11 @@ pub async fn execute(args: CreateArgs, json: bool) -> Result<()> {
             if !json {
                 let desc = &template.branches[i].description;
                 if desc.is_empty() {
-                    output::success(&format!("  {} Created '{}'", output::CHECKMARK, branch_name));
+                    output::success(&format!(
+                        "  {} Created '{}'",
+                        output::CHECKMARK,
+                        branch_name
+                    ));
                 } else {
                     output::success(&format!(
                         "  {} Created '{}' ({})",
@@ -111,9 +121,12 @@ pub async fn execute(args: CreateArgs, json: bool) -> Result<()> {
         }
 
         if json {
-            println!("{}", serde_json::to_string_pretty(
-                &serde_json::json!({ "template": template_name, "created": created })
-            )?);
+            println!(
+                "{}",
+                serde_json::to_string_pretty(
+                    &serde_json::json!({ "template": template_name, "created": created })
+                )?
+            );
         } else {
             output::success(&format!(
                 "Created {} branches from template '{}'",
@@ -128,9 +141,12 @@ pub async fn execute(args: CreateArgs, json: bool) -> Result<()> {
     let info = repo.create_branch(&args.name)?;
 
     if json {
-        println!("{}", serde_json::to_string_pretty(
-            &serde_json::json!({ "branch": info.name, "parent": info.parent })
-        )?);
+        println!(
+            "{}",
+            serde_json::to_string_pretty(
+                &serde_json::json!({ "branch": info.name, "parent": info.parent })
+            )?
+        );
     } else {
         output::success(&format!(
             "Created branch '{}' on top of '{}'",

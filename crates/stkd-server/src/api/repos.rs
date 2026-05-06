@@ -75,8 +75,15 @@ async fn list_repos(
         .ok_or_else(|| ApiError::NotFound("Organization not found".to_string()))?;
 
     // Check membership
-    if !state.db().memberships().is_member(org.id, auth_user.user_id).await? {
-        return Err(ApiError::Forbidden("Not a member of this organization".to_string()));
+    if !state
+        .db()
+        .memberships()
+        .is_member(org.id, auth_user.user_id)
+        .await?
+    {
+        return Err(ApiError::Forbidden(
+            "Not a member of this organization".to_string(),
+        ));
     }
 
     let repos = state.db().repositories().list_by_org(org.id).await?;
@@ -132,7 +139,9 @@ async fn connect_repo(
         .await?
         .is_some()
     {
-        return Err(ApiError::Conflict("Repository already connected".to_string()));
+        return Err(ApiError::Conflict(
+            "Repository already connected".to_string(),
+        ));
     }
 
     // Create repository
@@ -210,8 +219,15 @@ async fn get_stacks(
         .ok_or_else(|| ApiError::NotFound("Repository not found".to_string()))?;
 
     // Check membership
-    if !state.db().memberships().is_member(repo.org_id, auth_user.user_id).await? {
-        return Err(ApiError::Forbidden("Not a member of this organization".to_string()));
+    if !state
+        .db()
+        .memberships()
+        .is_member(repo.org_id, auth_user.user_id)
+        .await?
+    {
+        return Err(ApiError::Forbidden(
+            "Not a member of this organization".to_string(),
+        ));
     }
 
     // Get all branches
@@ -221,13 +237,18 @@ async fn get_stacks(
     let mut branch_responses = Vec::new();
     for branch in branches {
         let mr = if let Some(mr_id) = branch.mr_id {
-            state.db().merge_requests().get_by_id(mr_id).await?.map(|mr| MrResponse {
-                id: mr.id.to_string(),
-                number: mr.number,
-                title: mr.title,
-                state: mr.state.to_string(),
-                url: mr.url,
-            })
+            state
+                .db()
+                .merge_requests()
+                .get_by_id(mr_id)
+                .await?
+                .map(|mr| MrResponse {
+                    id: mr.id.to_string(),
+                    number: mr.number,
+                    title: mr.title,
+                    state: mr.state.to_string(),
+                    url: mr.url,
+                })
         } else {
             None
         };
@@ -242,7 +263,9 @@ async fn get_stacks(
         });
     }
 
-    Ok(Json(StackResponse { branches: branch_responses }))
+    Ok(Json(StackResponse {
+        branches: branch_responses,
+    }))
 }
 
 /// Trigger repository sync.
@@ -259,8 +282,15 @@ async fn sync_repo(
         .ok_or_else(|| ApiError::NotFound("Organization not found".to_string()))?;
 
     // Check membership
-    if !state.db().memberships().is_member(org.id, auth_user.user_id).await? {
-        return Err(ApiError::Forbidden("Not a member of this organization".to_string()));
+    if !state
+        .db()
+        .memberships()
+        .is_member(org.id, auth_user.user_id)
+        .await?
+    {
+        return Err(ApiError::Forbidden(
+            "Not a member of this organization".to_string(),
+        ));
     }
 
     let repo_uuid = Uuid::parse_str(&repo_id)
@@ -275,8 +305,7 @@ async fn sync_repo(
 /// Build repository routes.
 /// These routes are nested under /api/repos
 pub fn routes() -> Router<AppState> {
-    Router::new()
-        .route("/{repo_id}/stacks", get(get_stacks))
+    Router::new().route("/{repo_id}/stacks", get(get_stacks))
 }
 
 /// Organization repository routes (nested under /api/orgs/:slug)

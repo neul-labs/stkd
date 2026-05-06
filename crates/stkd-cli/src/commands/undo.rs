@@ -93,7 +93,9 @@ pub async fn execute(args: UndoArgs) -> Result<()> {
             output::success(&format!("Restored tracking for '{}'", branch));
         }
 
-        HistoryEntry::RenameBranch { old_name, new_name, .. } => {
+        HistoryEntry::RenameBranch {
+            old_name, new_name, ..
+        } => {
             // Undo rename = rename back
             if let Some(mut info) = repo.storage().load_branch(new_name)? {
                 repo.storage().delete_branch(new_name)?;
@@ -110,7 +112,10 @@ pub async fn execute(args: UndoArgs) -> Result<()> {
             repo.storage().update_branch(branch, |info| {
                 info.parent = old_parent.clone();
             })?;
-            output::success(&format!("Restored parent of '{}' to '{}'", branch, old_parent));
+            output::success(&format!(
+                "Restored parent of '{}' to '{}'",
+                branch, old_parent
+            ));
         }
 
         HistoryEntry::SetMergeRequest {

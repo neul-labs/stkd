@@ -45,11 +45,24 @@ fn draw_confirm(frame: &mut Frame, area: Rect, title: &str, message: &str) {
         Line::from(Span::styled(message, Style::default().fg(Color::White))),
         Line::from(""),
         Line::from(vec![
-            Span::styled("y", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "y",
+                Style::default()
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::styled(" = yes  ", Style::default().fg(Color::Gray)),
-            Span::styled("n", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "n",
+                Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+            ),
             Span::styled(" = no  ", Style::default().fg(Color::Gray)),
-            Span::styled("esc", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "esc",
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::styled(" = cancel", Style::default().fg(Color::Gray)),
         ]),
     ]);
@@ -78,13 +91,25 @@ fn draw_input(frame: &mut Frame, area: Rect, title: &str, value: &str) {
         Line::from(""),
         Line::from(Span::styled(
             format!("> {}", value),
-            Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::White)
+                .add_modifier(Modifier::BOLD),
         )),
         Line::from(""),
         Line::from(vec![
-            Span::styled("Enter", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "Enter",
+                Style::default()
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::styled(" = confirm  ", Style::default().fg(Color::Gray)),
-            Span::styled("Esc", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "Esc",
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::styled(" = cancel", Style::default().fg(Color::Gray)),
         ]),
     ]);
@@ -108,7 +133,9 @@ fn draw_progress(frame: &mut Frame, area: Rect, title: &str, message: &str) {
         Line::from(""),
         Line::from(Span::styled(
             format!("⠋ {}", message),
-            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
         )),
         Line::from(""),
         Line::from(Span::styled(

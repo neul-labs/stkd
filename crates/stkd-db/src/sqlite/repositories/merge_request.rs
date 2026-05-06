@@ -50,12 +50,10 @@ impl MergeRequestRepository for SqliteMergeRequestRepository {
     }
 
     async fn get_by_id(&self, id: Uuid) -> DbResult<Option<MergeRequest>> {
-        let row = sqlx::query_as::<_, MergeRequestRow>(
-            "SELECT * FROM merge_requests WHERE id = ?",
-        )
-        .bind(id.to_string())
-        .fetch_optional(&self.pool)
-        .await?;
+        let row = sqlx::query_as::<_, MergeRequestRow>("SELECT * FROM merge_requests WHERE id = ?")
+            .bind(id.to_string())
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(row.map(|r| r.into()))
     }
@@ -150,14 +148,13 @@ impl MergeRequestRepository for SqliteMergeRequestRepository {
     }
 
     async fn update_state(&self, id: Uuid, state: MergeRequestState) -> DbResult<()> {
-        let result = sqlx::query(
-            "UPDATE merge_requests SET state = ?, updated_at = ? WHERE id = ?",
-        )
-        .bind(state.to_string())
-        .bind(Utc::now())
-        .bind(id.to_string())
-        .execute(&self.pool)
-        .await?;
+        let result =
+            sqlx::query("UPDATE merge_requests SET state = ?, updated_at = ? WHERE id = ?")
+                .bind(state.to_string())
+                .bind(Utc::now())
+                .bind(id.to_string())
+                .execute(&self.pool)
+                .await?;
 
         if result.rows_affected() == 0 {
             return Err(DbError::NotFound(format!(

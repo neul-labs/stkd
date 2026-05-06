@@ -74,7 +74,8 @@ impl DeviceFlow {
             scope: &'a str,
         }
 
-        let response = self.client
+        let response = self
+            .client
             .post("https://github.com/login/device/code")
             .header("Accept", "application/json")
             .form(&Request {
@@ -90,7 +91,8 @@ impl DeviceFlow {
             anyhow::bail!("Failed to request device code: {}", text);
         }
 
-        response.json()
+        response
+            .json()
             .await
             .context("Failed to parse device code response")
     }
@@ -105,7 +107,8 @@ impl DeviceFlow {
             grant_type: &'a str,
         }
 
-        let response = self.client
+        let response = self
+            .client
             .post("https://github.com/login/oauth/access_token")
             .header("Accept", "application/json")
             .form(&Request {
@@ -142,7 +145,8 @@ impl DeviceFlow {
                     anyhow::bail!("Authorization was denied by user.");
                 }
                 _ => {
-                    anyhow::bail!("OAuth error: {} - {}",
+                    anyhow::bail!(
+                        "OAuth error: {} - {}",
                         error.error,
                         error.error_description.unwrap_or_default()
                     );

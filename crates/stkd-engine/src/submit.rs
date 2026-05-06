@@ -2,8 +2,8 @@
 
 use anyhow::{Context, Result};
 use serde::Serialize;
-use stkd_core::{Repository, Storage};
 use stkd_core::dag::BranchGraph;
+use stkd_core::Repository;
 use stkd_provider_api::{CreateMergeRequest, Provider, RepoId, UpdateMergeRequest};
 
 use crate::retry::{with_retry, DEFAULT_MAX_RETRIES};
@@ -65,7 +65,7 @@ pub struct UpdatedMr {
 }
 
 /// Push branches to remote.
-fn push_branches(repo: &Repository, branches: &[String]) -> Result<Vec<String>> {
+fn push_branches(_repo: &Repository, branches: &[String]) -> Result<Vec<String>> {
     let mut pushed = Vec::new();
     for branch in branches {
         let result = std::process::Command::new("git")
@@ -139,11 +139,16 @@ pub fn generate_stack_body(
     body
 }
 
-fn build_stack_branches(repo: &Repository, graph: &BranchGraph, current: &str) -> Result<Vec<(String, Option<u64>)>> {
+fn build_stack_branches(
+    repo: &Repository,
+    graph: &BranchGraph,
+    current: &str,
+) -> Result<Vec<(String, Option<u64>)>> {
     let all_stack = graph.stack(current);
     let mut result = Vec::new();
     for b in &all_stack {
-        let mr_num = repo.storage()
+        let mr_num = repo
+            .storage()
             .load_branch(b)
             .ok()
             .flatten()
@@ -155,7 +160,7 @@ fn build_stack_branches(repo: &Repository, graph: &BranchGraph, current: &str) -
 
 /// Determine which branches to submit based on options.
 pub fn select_branches(
-    repo: &Repository,
+    _repo: &Repository,
     graph: &BranchGraph,
     current: &str,
     opts: &SubmitOptions,
@@ -164,21 +169,19 @@ pub fn select_branches(
         opts.only.clone()
     } else if let Some(ref from_branch) = opts.from {
         let mut to_submit = vec![from_branch.clone()];
-        to_submit.extend(
-            graph.descendants(from_branch).iter().map(|s| s.to_string())
-        );
+        to_submit.extend(graph.descendants(from_branch).iter().map(|s| s.to_string()));
         to_submit
     } else if let Some(ref to_branch) = opts.to {
-        graph.ancestors(to_branch).iter()
+        graph
+            .ancestors(to_branch)
+            .iter()
             .filter(|b| !graph.is_trunk(b))
             .map(|s| s.to_string())
             .chain(std::iter::once(to_branch.clone()))
             .collect()
     } else if opts.stack {
         let mut to_submit = vec![current.to_string()];
-        to_submit.extend(
-            graph.descendants(current).iter().map(|s| s.to_string())
-        );
+        to_submit.extend(graph.descendants(current).iter().map(|s| s.to_string()));
         to_submit
     } else {
         vec![current.to_string()]
@@ -190,7 +193,7 @@ pub fn select_branches(
 /// Generate a default title from a branch name.
 pub fn default_title(branch: &str) -> String {
     let name = branch.rsplit('/').next().unwrap_or(branch);
-    let title = name.replace('-', " ").replace('_', " ");
+    let title = name.replace(['-', '_'], " ");
     let mut chars = title.chars();
     match chars.next() {
         None => String::new(),
@@ -205,9 +208,9 @@ pub async fn submit(
     provider: &dyn Provider,
     repo_id: &RepoId,
 ) -> Result<SubmitResult> {
-    let current = repo.current_branch()?.ok_or_else(|| {
-        anyhow::anyhow!("Not on a branch")
-    })?;
+    let current = repo
+        .current_branch()?
+        .ok_or_else(|| anyhow::anyhow!("Not on a branch"))?;
 
     if !repo.storage().is_tracked(&current) {
         anyhow::bail!("Branch '{}' is not tracked. Run 'gt track' first.", current);
@@ -253,7 +256,8 @@ pub async fn submit(
 
     // Create/update MRs
     for branch in &branches {
-        let info = repo.storage()
+        let info = repo
+            .storage()
             .load_branch(branch)?
             .context("Branch info not found")?;
 
@@ -267,22 +271,26 @@ pub async fn submit(
             // Update existing MR
             if opts.update {
                 let custom_body = opts.body.as_deref().or(template_body.as_deref());
-                let new_body = generate_stack_body(&stack_branches,
-                    branch,
-                    custom_body,
-                );
+                let new_body = generate_stack_body(&stack_branches, branch, custom_body);
 
                 let update = UpdateMergeRequest {
                     title: opts.title.clone(),
                     body: Some(new_body),
                     target_branch: Some(base),
-                    labels: if opts.labels.is_empty() { None } else { Some(opts.labels.clone()) },
+                    labels: if opts.labels.is_empty() {
+                        None
+                    } else {
+                        Some(opts.labels.clone())
+                    },
                     ..Default::default()
                 };
 
-                with_retry(|| provider.update_mr(repo_id, mr_number.into(), update.clone()), DEFAULT_MAX_RETRIES)
-                    .await
-                    .context("Failed to update MR")?;
+                with_retry(
+                    || provider.update_mr(repo_id, mr_number.into(), update.clone()),
+                    DEFAULT_MAX_RETRIES,
+                )
+                .await
+                .context("Failed to update MR")?;
 
                 result.updated.push(UpdatedMr {
                     branch: branch.clone(),
@@ -295,12 +303,8 @@ pub async fn submit(
             // Create new MR
             let title = opts.title.clone().unwrap_or_else(|| default_title(branch));
 
-            let custom_body = opts.body.as_deref()
-                .or(template_body.as_deref());
-            let body = generate_stack_body(&stack_branches,
-                branch,
-                custom_body,
-            );
+            let custom_body = opts.body.as_deref().or(template_body.as_deref());
+            let body = generate_stack_body(&stack_branches, branch, custom_body);
 
             let create = CreateMergeRequest {
                 title: title.clone(),
@@ -313,9 +317,12 @@ pub async fn submit(
                 ..Default::default()
             };
 
-            let mr = with_retry(|| provider.create_mr(repo_id, create.clone()), DEFAULT_MAX_RETRIES)
-                .await
-                .context("Failed to create MR")?;
+            let mr = with_retry(
+                || provider.create_mr(repo_id, create.clone()),
+                DEFAULT_MAX_RETRIES,
+            )
+            .await
+            .context("Failed to create MR")?;
 
             // Save MR number to branch info
             repo.storage().update_branch(branch, |b| {
@@ -338,16 +345,17 @@ pub async fn submit(
 
         for (branch_name, mr_number) in &updated_stack {
             if let Some(mr_num) = mr_number {
-                let body = generate_stack_body(&updated_stack,
-                    branch_name,
-                    None,
-                );
+                let body = generate_stack_body(&updated_stack, branch_name, None);
                 let update = UpdateMergeRequest {
                     body: Some(body),
                     ..Default::default()
                 };
 
-                let _ = with_retry(|| provider.update_mr(repo_id, (*mr_num).into(), update.clone()), DEFAULT_MAX_RETRIES).await;
+                let _ = with_retry(
+                    || provider.update_mr(repo_id, (*mr_num).into(), update.clone()),
+                    DEFAULT_MAX_RETRIES,
+                )
+                .await;
             }
         }
     }

@@ -209,7 +209,10 @@ async fn main() -> Result<()> {
                             let error_json = serde_json::json!({
                                 "error": format!("{:#}", e),
                             });
-                            eprintln!("{}", serde_json::to_string_pretty(&error_json).unwrap_or_default());
+                            eprintln!(
+                                "{}",
+                                serde_json::to_string_pretty(&error_json).unwrap_or_default()
+                            );
                         } else {
                             output::error(&format!("{:#}", e));
                             if let Some(hint) = e.hint() {
@@ -292,7 +295,10 @@ async fn main() -> Result<()> {
             let error_json = serde_json::json!({
                 "error": format!("{:#}", e),
             });
-            eprintln!("{}", serde_json::to_string_pretty(&error_json).unwrap_or_default());
+            eprintln!(
+                "{}",
+                serde_json::to_string_pretty(&error_json).unwrap_or_default()
+            );
         } else {
             // Display the error
             output::error(&format!("{:#}", e));

@@ -44,17 +44,19 @@ pub fn branches_to_restack(
     let graph = repo.load_graph()?;
 
     let all_branches: Vec<String> = if opts.current_only {
-        let current = repo.current_branch()?.ok_or_else(|| {
-            anyhow::anyhow!("Not on a branch")
-        })?;
+        let current = repo
+            .current_branch()?
+            .ok_or_else(|| anyhow::anyhow!("Not on a branch"))?;
 
         let mut to_restack = vec![current.clone()];
-        to_restack.extend(
-            graph.descendants(&current).iter().map(|s| s.to_string())
-        );
+        to_restack.extend(graph.descendants(&current).iter().map(|s| s.to_string()));
         to_restack
     } else {
-        graph.topological_order().iter().map(|s| s.to_string()).collect()
+        graph
+            .topological_order()
+            .iter()
+            .map(|s| s.to_string())
+            .collect()
     };
 
     let branches: Vec<String> = if opts.force {

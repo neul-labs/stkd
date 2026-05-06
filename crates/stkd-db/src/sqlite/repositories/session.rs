@@ -44,23 +44,19 @@ impl SessionRepository for SqliteSessionRepository {
     }
 
     async fn get_by_id(&self, id: Uuid) -> DbResult<Option<Session>> {
-        let row = sqlx::query_as::<_, SessionRow>(
-            "SELECT * FROM sessions WHERE id = ?",
-        )
-        .bind(id.to_string())
-        .fetch_optional(&self.pool)
-        .await?;
+        let row = sqlx::query_as::<_, SessionRow>("SELECT * FROM sessions WHERE id = ?")
+            .bind(id.to_string())
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(row.map(|r| r.into()))
     }
 
     async fn get_by_token(&self, token_hash: &str) -> DbResult<Option<Session>> {
-        let row = sqlx::query_as::<_, SessionRow>(
-            "SELECT * FROM sessions WHERE token_hash = ?",
-        )
-        .bind(token_hash)
-        .fetch_optional(&self.pool)
-        .await?;
+        let row = sqlx::query_as::<_, SessionRow>("SELECT * FROM sessions WHERE token_hash = ?")
+            .bind(token_hash)
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(row.map(|r| r.into()))
     }

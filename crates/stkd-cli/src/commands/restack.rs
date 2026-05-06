@@ -41,10 +41,17 @@ pub async fn execute(args: RestackArgs, json: bool) -> Result<()> {
                     output::success(&format!("Restacked {}", entry.branch));
                 }
                 stkd_engine::RestackStatus::UpToDate => {
-                    output::info(&format!("  {} {} is up to date", output::ARROW, entry.branch));
+                    output::info(&format!(
+                        "  {} {} is up to date",
+                        output::ARROW,
+                        entry.branch
+                    ));
                 }
                 stkd_engine::RestackStatus::Conflict => {
-                    output::warn(&format!("Conflict restacking {} onto {}", entry.branch, entry.onto));
+                    output::warn(&format!(
+                        "Conflict restacking {} onto {}",
+                        entry.branch, entry.onto
+                    ));
                     output::hint("Resolve conflicts and run 'gt continue'");
                 }
                 stkd_engine::RestackStatus::Error => {
@@ -55,7 +62,10 @@ pub async fn execute(args: RestackArgs, json: bool) -> Result<()> {
 
         if result.restacked.is_empty() {
             output::success("All branches are up to date");
-        } else if !result.restacked.iter().any(|e| e.status == stkd_engine::RestackStatus::Conflict || e.status == stkd_engine::RestackStatus::Error) {
+        } else if !result.restacked.iter().any(|e| {
+            e.status == stkd_engine::RestackStatus::Conflict
+                || e.status == stkd_engine::RestackStatus::Error
+        }) {
             output::success("Restack complete");
         }
     }

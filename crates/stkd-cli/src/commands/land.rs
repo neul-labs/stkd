@@ -1,6 +1,6 @@
 //! Land command - merge MRs and clean up branches
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::Args;
 use stkd_core::Repository;
 
@@ -47,9 +47,9 @@ pub async fn execute(args: LandArgs, json: bool) -> Result<()> {
 
     if !json && !args.dry_run && !args.yes {
         let graph = repo.load_graph()?;
-        let current = repo.current_branch()?.ok_or_else(|| {
-            anyhow::anyhow!("Not on a branch")
-        })?;
+        let current = repo
+            .current_branch()?
+            .ok_or_else(|| anyhow::anyhow!("Not on a branch"))?;
 
         let mut to_land = Vec::new();
         if args.stack {
@@ -63,9 +63,10 @@ pub async fn execute(args: LandArgs, json: bool) -> Result<()> {
             }
         }
 
-        let info = repo.storage().load_branch(&current)?.ok_or_else(|| {
-            anyhow::anyhow!("Branch info not found")
-        })?;
+        let info = repo
+            .storage()
+            .load_branch(&current)?
+            .ok_or_else(|| anyhow::anyhow!("Branch info not found"))?;
         if let Some(mr_num) = info.merge_request_id {
             to_land.push((current.clone(), mr_num));
         }
@@ -90,13 +91,23 @@ pub async fn execute(args: LandArgs, json: bool) -> Result<()> {
     } else {
         for landed in &result.landed {
             if landed.merged {
-                output::success(&format!("Merged MR #{} for {}", landed.mr_number, landed.branch));
+                output::success(&format!(
+                    "Merged MR #{} for {}",
+                    landed.mr_number, landed.branch
+                ));
             } else {
-                output::warn(&format!("MR #{} was not merged: {}", landed.mr_number, landed.message));
+                output::warn(&format!(
+                    "MR #{} was not merged: {}",
+                    landed.mr_number, landed.message
+                ));
             }
         }
         for deleted in &result.deleted {
-            output::info(&format!("  {} Deleted local branch {}", output::ARROW, deleted));
+            output::info(&format!(
+                "  {} Deleted local branch {}",
+                output::ARROW,
+                deleted
+            ));
         }
         if result.current_switched_to_trunk {
             output::info(&format!("Switched to {}", repo.trunk()));

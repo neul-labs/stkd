@@ -37,6 +37,7 @@ pub trait MergeRequestRepository: Send + Sync {
     async fn update_state(&self, id: Uuid, state: MergeRequestState) -> DbResult<()>;
 
     /// Find or create a merge request.
+    #[allow(clippy::too_many_arguments)]
     async fn find_or_create_by_number(
         &self,
         repo_id: Uuid,

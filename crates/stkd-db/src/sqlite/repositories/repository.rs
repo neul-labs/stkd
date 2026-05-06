@@ -47,12 +47,10 @@ impl RepositoryRepository for SqliteRepositoryRepository {
     }
 
     async fn get_by_id(&self, id: Uuid) -> DbResult<Option<Repository>> {
-        let row = sqlx::query_as::<_, RepositoryRow>(
-            "SELECT * FROM repositories WHERE id = ?",
-        )
-        .bind(id.to_string())
-        .fetch_optional(&self.pool)
-        .await?;
+        let row = sqlx::query_as::<_, RepositoryRow>("SELECT * FROM repositories WHERE id = ?")
+            .bind(id.to_string())
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(row.map(|r| r.into()))
     }
@@ -132,13 +130,11 @@ impl RepositoryRepository for SqliteRepositoryRepository {
     }
 
     async fn mark_synced(&self, id: Uuid) -> DbResult<()> {
-        let result = sqlx::query(
-            "UPDATE repositories SET synced_at = ? WHERE id = ?",
-        )
-        .bind(Utc::now())
-        .bind(id.to_string())
-        .execute(&self.pool)
-        .await?;
+        let result = sqlx::query("UPDATE repositories SET synced_at = ? WHERE id = ?")
+            .bind(Utc::now())
+            .bind(id.to_string())
+            .execute(&self.pool)
+            .await?;
 
         if result.rows_affected() == 0 {
             return Err(DbError::NotFound(format!(
@@ -151,13 +147,11 @@ impl RepositoryRepository for SqliteRepositoryRepository {
     }
 
     async fn set_active(&self, id: Uuid, is_active: bool) -> DbResult<()> {
-        let result = sqlx::query(
-            "UPDATE repositories SET is_active = ? WHERE id = ?",
-        )
-        .bind(is_active)
-        .bind(id.to_string())
-        .execute(&self.pool)
-        .await?;
+        let result = sqlx::query("UPDATE repositories SET is_active = ? WHERE id = ?")
+            .bind(is_active)
+            .bind(id.to_string())
+            .execute(&self.pool)
+            .await?;
 
         if result.rows_affected() == 0 {
             return Err(DbError::NotFound(format!(

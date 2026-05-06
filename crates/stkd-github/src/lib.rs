@@ -35,8 +35,8 @@
 //! The original [`GitHubClient`] API is still available for backward
 //! compatibility but new code should prefer [`GitHubProvider`].
 
-pub mod auth;
 pub mod api;
+pub mod auth;
 pub mod oauth;
 pub mod pr;
 pub mod provider;
@@ -48,18 +48,17 @@ pub use provider::GitHubProvider;
 
 // Re-export provider types for convenience
 pub use stkd_provider_api::{
-    Provider, MergeRequestProvider, UserProvider, RepositoryProvider,
-    PipelineProvider, ApprovalProvider, LabelProvider, MilestoneProvider,
-    RepoId, MergeRequestId, MergeRequest, CreateMergeRequest, UpdateMergeRequest,
-    MergeMethod as ProviderMergeMethod, MergeResult as ProviderMergeResult,
-    User, Review, Label, Milestone, Pipeline, PipelineStatus,
-    ProviderCapabilities, MergeRequestState, ApprovalState,
+    ApprovalProvider, ApprovalState, CreateMergeRequest, Label, LabelProvider,
+    MergeMethod as ProviderMergeMethod, MergeRequest, MergeRequestId, MergeRequestProvider,
+    MergeRequestState, MergeResult as ProviderMergeResult, Milestone, MilestoneProvider, Pipeline,
+    PipelineProvider, PipelineStatus, Provider, ProviderCapabilities, RepoId, RepositoryProvider,
+    Review, UpdateMergeRequest, User, UserProvider,
 };
 
 // Legacy API (for backward compatibility)
-pub use auth::{GitHubAuth, AuthToken};
 pub use api::GitHubClient;
+pub use auth::{AuthToken, GitHubAuth};
 pub use oauth::DeviceFlow;
-pub use pr::{PullRequest, PullRequestCreate, PullRequestUpdate, MergeMethod, MergeResult};
+pub use pr::{MergeMethod, MergeResult, PullRequest, PullRequestCreate, PullRequestUpdate};
 pub use repo::RepoInfo;
 pub use sync::RemoteSync;

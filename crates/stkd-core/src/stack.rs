@@ -291,11 +291,9 @@ impl<'a> Stack<'a> {
     ///
     /// Returns `false` if any MR lacks approval status or is not approved.
     pub fn all_approved(&self) -> bool {
-        self.entries.iter().all(|e| {
-            e.branch
-                .review_status()
-                .map_or(false, |s| s == crate::branch::ReviewStatus::Approved)
-        })
+        self.entries
+            .iter()
+            .all(|e| e.branch.review_status() == Some(crate::branch::ReviewStatus::Approved))
     }
 
     /// Returns `true` if all CI checks have passed for the stack.
@@ -305,7 +303,7 @@ impl<'a> Stack<'a> {
         self.entries.iter().all(|e| {
             e.branch
                 .ci_status()
-                .map_or(true, |s| s == crate::branch::CiStatus::Passed)
+                .is_none_or(|s| s == crate::branch::CiStatus::Passed)
         })
     }
 
@@ -457,7 +455,13 @@ pub fn format_stack(stack: &Stack<'_>, short: bool) -> String {
         };
 
         if short {
-            output.push_str(&format!("{}{} {}{}\n", indent, marker, entry.name(), mr_info));
+            output.push_str(&format!(
+                "{}{} {}{}\n",
+                indent,
+                marker,
+                entry.name(),
+                mr_info
+            ));
         } else {
             let status = format!("[{}]", entry.status());
             output.push_str(&format!(

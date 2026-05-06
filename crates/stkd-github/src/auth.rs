@@ -1,8 +1,8 @@
 //! GitHub authentication
 
-use std::path::PathBuf;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
 /// GitHub authentication methods
 #[derive(Debug, Clone)]
@@ -28,7 +28,11 @@ impl GitHubAuth {
 
     /// Check if OAuth token needs refresh
     pub fn needs_refresh(&self) -> bool {
-        if let GitHubAuth::OAuth { expires_at: Some(exp), .. } = self {
+        if let GitHubAuth::OAuth {
+            expires_at: Some(exp),
+            ..
+        } = self
+        {
             *exp < chrono::Utc::now() + chrono::Duration::minutes(5)
         } else {
             false
@@ -76,7 +80,11 @@ impl AuthToken {
     }
 
     /// Create a new OAuth token
-    pub fn oauth(token: String, refresh: Option<String>, expires_at: Option<chrono::DateTime<chrono::Utc>>) -> Self {
+    pub fn oauth(
+        token: String,
+        refresh: Option<String>,
+        expires_at: Option<chrono::DateTime<chrono::Utc>>,
+    ) -> Self {
         Self {
             token_type: TokenType::OAuth,
             token,

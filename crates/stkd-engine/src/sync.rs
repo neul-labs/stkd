@@ -84,10 +84,13 @@ pub async fn sync(
 
         // Return to original branch if it still exists
         if let Some(ref branch) = current_branch {
-            if branch != &trunk {
-                if repo.git().find_branch(branch, git2::BranchType::Local).is_ok() {
-                    repo.checkout(branch)?;
-                }
+            if branch != &trunk
+                && repo
+                    .git()
+                    .find_branch(branch, git2::BranchType::Local)
+                    .is_ok()
+            {
+                repo.checkout(branch)?;
             }
         }
     }
@@ -98,7 +101,12 @@ pub async fn sync(
 
         for branch_info in branches {
             if let Some(mr_number) = branch_info.merge_request_id {
-                if let Ok(mr) = with_retry(|| provider.get_mr(repo_id, mr_number.into()), DEFAULT_MAX_RETRIES).await {
+                if let Ok(mr) = with_retry(
+                    || provider.get_mr(repo_id, mr_number.into()),
+                    DEFAULT_MAX_RETRIES,
+                )
+                .await
+                {
                     match mr.state {
                         stkd_provider_api::MergeRequestState::Merged => {
                             result.merged_branches.push(branch_info.name.clone());
@@ -168,7 +176,11 @@ pub async fn sync(
     // Return to original branch or trunk if merged
     if let Some(ref branch) = current_branch {
         if !result.merged_branches.contains(branch) {
-            if repo.git().find_branch(branch, git2::BranchType::Local).is_ok() {
+            if repo
+                .git()
+                .find_branch(branch, git2::BranchType::Local)
+                .is_ok()
+            {
                 repo.checkout(branch)?;
             }
         } else {

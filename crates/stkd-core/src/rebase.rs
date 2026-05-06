@@ -19,22 +19,13 @@ pub enum RebaseResult {
         new_head: String,
     },
     /// Rebase has conflicts that need resolution
-    Conflict {
-        branch: String,
-        onto: String,
-    },
+    Conflict { branch: String, onto: String },
     /// Nothing to rebase (already up to date)
-    UpToDate {
-        branch: String,
-    },
+    UpToDate { branch: String },
 }
 
 /// Rebase a single branch onto its parent
-pub fn rebase_branch(
-    repo: &GitRepo,
-    branch_name: &str,
-    onto: &str,
-) -> Result<RebaseResult> {
+pub fn rebase_branch(repo: &GitRepo, branch_name: &str, onto: &str) -> Result<RebaseResult> {
     info!("Rebasing {} onto {}", branch_name, onto);
 
     // Get branch references
@@ -130,7 +121,11 @@ pub fn restack_all(
     let mut results = vec![];
 
     // Get branches in topological order (parents before children)
-    let order: Vec<String> = graph.topological_order().iter().map(|s| s.to_string()).collect();
+    let order: Vec<String> = graph
+        .topological_order()
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
 
     for branch_name in &order {
         if let Some(info) = graph.get(branch_name) {
@@ -156,7 +151,11 @@ pub fn restack_all(
                 // Rebase onto parent
                 match rebase_branch(repo, branch_name, &info.parent) {
                     Ok(result) => {
-                        if let RebaseResult::Conflict { ref branch, ref onto } = result {
+                        if let RebaseResult::Conflict {
+                            ref branch,
+                            ref onto,
+                        } = result
+                        {
                             // Save conflict state for continue/abort
                             storage.set_conflict(ConflictState {
                                 branch: branch.clone(),
@@ -240,11 +239,7 @@ pub fn abort_rebase(repo: &GitRepo, storage: &Storage) -> Result<()> {
 }
 
 /// Check if a branch needs rebasing onto its parent
-pub fn needs_rebase(
-    repo: &GitRepo,
-    branch_name: &str,
-    parent_name: &str,
-) -> Result<bool> {
+pub fn needs_rebase(repo: &GitRepo, branch_name: &str, parent_name: &str) -> Result<bool> {
     let branch = repo.find_branch(branch_name, BranchType::Local)?;
     let parent = repo.find_branch(parent_name, BranchType::Local)?;
 

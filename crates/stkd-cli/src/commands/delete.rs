@@ -19,11 +19,9 @@ pub struct DeleteArgs {
 pub async fn execute(args: DeleteArgs) -> Result<()> {
     let repo = Repository::open(".")?;
 
-    if !args.force {
-        if !output::confirm(&format!("Delete branch '{}'?", args.branch)) {
-            output::info("Cancelled");
-            return Ok(());
-        }
+    if !args.force && !output::confirm(&format!("Delete branch '{}'?'", args.branch)) {
+        output::info("Cancelled");
+        return Ok(());
     }
 
     repo.delete_branch(&args.branch, args.force)?;

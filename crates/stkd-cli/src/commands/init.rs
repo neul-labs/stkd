@@ -1,9 +1,8 @@
 //! Initialize Stack in a repository
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::Args;
 use colored::Colorize;
-use stkd_core::config::{ProviderConfig, StackConfig};
 use stkd_core::Repository;
 
 use crate::output;
@@ -27,7 +26,12 @@ pub async fn execute(args: InitArgs, json: bool) -> Result<()> {
     // Check if already initialized
     if Repository::open(".").is_ok() {
         if json {
-            println!("{}", serde_json::to_string_pretty(&serde_json::json!({"error": "Stack is already initialized in this repository" }))?);
+            println!(
+                "{}",
+                serde_json::to_string_pretty(
+                    &serde_json::json!({"error": "Stack is already initialized in this repository" })
+                )?
+            );
         } else {
             output::warn("Stack is already initialized in this repository");
             output::hint("Use 'gt config' to view or modify settings");

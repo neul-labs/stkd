@@ -21,19 +21,11 @@ pub struct BranchInfo {
 
     /// Associated merge request ID (PR number, MR IID, etc.)
     /// This is the provider-agnostic identifier for the merge request.
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "pr_number"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "pr_number")]
     pub merge_request_id: Option<u64>,
 
     /// Merge request URL
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "pr_url"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "pr_url")]
     pub merge_request_url: Option<String>,
 
     /// Provider that hosts this merge request (github, gitlab, gitea, etc.)
@@ -365,7 +357,11 @@ mod tests {
     #[test]
     fn test_branch_clear_merge_request() {
         let mut info = BranchInfo::new("feature/test", "main");
-        info.set_merge_request(42, "https://gitlab.com/group/repo/-/merge_requests/42", "gitlab");
+        info.set_merge_request(
+            42,
+            "https://gitlab.com/group/repo/-/merge_requests/42",
+            "gitlab",
+        );
         assert!(info.has_merge_request());
 
         info.clear_merge_request();

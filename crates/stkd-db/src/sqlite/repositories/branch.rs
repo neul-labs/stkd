@@ -46,24 +46,21 @@ impl BranchRepository for SqliteBranchRepository {
     }
 
     async fn get_by_id(&self, id: Uuid) -> DbResult<Option<Branch>> {
-        let row = sqlx::query_as::<_, BranchRow>(
-            "SELECT * FROM branches WHERE id = ?",
-        )
-        .bind(id.to_string())
-        .fetch_optional(&self.pool)
-        .await?;
+        let row = sqlx::query_as::<_, BranchRow>("SELECT * FROM branches WHERE id = ?")
+            .bind(id.to_string())
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(row.map(|r| r.into()))
     }
 
     async fn get_by_name(&self, repo_id: Uuid, name: &str) -> DbResult<Option<Branch>> {
-        let row = sqlx::query_as::<_, BranchRow>(
-            "SELECT * FROM branches WHERE repo_id = ? AND name = ?",
-        )
-        .bind(repo_id.to_string())
-        .bind(name)
-        .fetch_optional(&self.pool)
-        .await?;
+        let row =
+            sqlx::query_as::<_, BranchRow>("SELECT * FROM branches WHERE repo_id = ? AND name = ?")
+                .bind(repo_id.to_string())
+                .bind(name)
+                .fetch_optional(&self.pool)
+                .await?;
 
         Ok(row.map(|r| r.into()))
     }
@@ -136,14 +133,12 @@ impl BranchRepository for SqliteBranchRepository {
     }
 
     async fn update_status(&self, id: Uuid, status: BranchStatus) -> DbResult<()> {
-        let result = sqlx::query(
-            "UPDATE branches SET status = ?, updated_at = ? WHERE id = ?",
-        )
-        .bind(status.to_string())
-        .bind(Utc::now())
-        .bind(id.to_string())
-        .execute(&self.pool)
-        .await?;
+        let result = sqlx::query("UPDATE branches SET status = ?, updated_at = ? WHERE id = ?")
+            .bind(status.to_string())
+            .bind(Utc::now())
+            .bind(id.to_string())
+            .execute(&self.pool)
+            .await?;
 
         if result.rows_affected() == 0 {
             return Err(DbError::NotFound(format!(
@@ -156,14 +151,12 @@ impl BranchRepository for SqliteBranchRepository {
     }
 
     async fn update_head(&self, id: Uuid, head_sha: &str) -> DbResult<()> {
-        let result = sqlx::query(
-            "UPDATE branches SET head_sha = ?, updated_at = ? WHERE id = ?",
-        )
-        .bind(head_sha)
-        .bind(Utc::now())
-        .bind(id.to_string())
-        .execute(&self.pool)
-        .await?;
+        let result = sqlx::query("UPDATE branches SET head_sha = ?, updated_at = ? WHERE id = ?")
+            .bind(head_sha)
+            .bind(Utc::now())
+            .bind(id.to_string())
+            .execute(&self.pool)
+            .await?;
 
         if result.rows_affected() == 0 {
             return Err(DbError::NotFound(format!(
@@ -176,14 +169,12 @@ impl BranchRepository for SqliteBranchRepository {
     }
 
     async fn set_mr(&self, id: Uuid, mr_id: Option<Uuid>) -> DbResult<()> {
-        let result = sqlx::query(
-            "UPDATE branches SET mr_id = ?, updated_at = ? WHERE id = ?",
-        )
-        .bind(mr_id.map(|id| id.to_string()))
-        .bind(Utc::now())
-        .bind(id.to_string())
-        .execute(&self.pool)
-        .await?;
+        let result = sqlx::query("UPDATE branches SET mr_id = ?, updated_at = ? WHERE id = ?")
+            .bind(mr_id.map(|id| id.to_string()))
+            .bind(Utc::now())
+            .bind(id.to_string())
+            .execute(&self.pool)
+            .await?;
 
         if result.rows_affected() == 0 {
             return Err(DbError::NotFound(format!(
@@ -205,7 +196,11 @@ impl BranchRepository for SqliteBranchRepository {
             return Ok(branch);
         }
 
-        let branch = Branch::new(repo_id, name.to_string(), parent_name.map(|s| s.to_string()));
+        let branch = Branch::new(
+            repo_id,
+            name.to_string(),
+            parent_name.map(|s| s.to_string()),
+        );
         self.create(&branch).await?;
         Ok(branch)
     }

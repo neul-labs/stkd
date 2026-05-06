@@ -23,8 +23,7 @@ pub fn draw(frame: &mut Frame, app: &App, area: Rect) {
         }
 
         for (branch_idx, entry) in stack.iter().enumerate() {
-            let is_selected =
-                stack_idx == app.selected_stack && branch_idx == app.selected_branch;
+            let is_selected = stack_idx == app.selected_stack && branch_idx == app.selected_branch;
 
             let mut spans = vec![];
 
@@ -46,11 +45,16 @@ pub fn draw(frame: &mut Frame, app: &App, area: Rect) {
             } else {
                 "├─"
             };
-            spans.push(Span::styled(connector, Style::default().fg(Color::DarkGray)));
+            spans.push(Span::styled(
+                connector,
+                Style::default().fg(Color::DarkGray),
+            ));
 
             let marker = if entry.is_current { "◉ " } else { "○ " };
             let marker_style = if entry.is_current {
-                Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default().fg(Color::Gray)
             };
@@ -62,7 +66,9 @@ pub fn draw(frame: &mut Frame, app: &App, area: Rect) {
                     .bg(Color::Blue)
                     .add_modifier(Modifier::BOLD)
             } else if entry.is_current {
-                Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default().fg(Color::White)
             };
@@ -90,10 +96,7 @@ pub fn draw(frame: &mut Frame, app: &App, area: Rect) {
             }
 
             if entry.is_current {
-                spans.push(Span::styled(
-                    " [active]",
-                    Style::default().fg(Color::Green),
-                ));
+                spans.push(Span::styled(" [active]", Style::default().fg(Color::Green)));
             }
             if is_selected && !entry.is_current {
                 spans.push(Span::styled(

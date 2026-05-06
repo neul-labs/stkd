@@ -51,7 +51,8 @@ pub async fn execute(args: AuthArgs) -> Result<()> {
     } else {
         // Try to auto-detect from current repo
         match stkd_core::Repository::open(".") {
-            Ok(repo) => stkd_engine::detect_provider_type(&repo).unwrap_or(stkd_engine::ProviderType::GitHub),
+            Ok(repo) => stkd_engine::detect_provider_type(&repo)
+                .unwrap_or(stkd_engine::ProviderType::GitHub),
             Err(_) => stkd_engine::ProviderType::GitHub, // Default to GitHub if not in a repo
         }
     };

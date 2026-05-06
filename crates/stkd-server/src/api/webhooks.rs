@@ -1,11 +1,6 @@
 //! Webhook handlers for GitHub and GitLab events.
 
-use axum::{
-    extract::State,
-    http::HeaderMap,
-    routing::post,
-    Json, Router,
-};
+use axum::{extract::State, http::HeaderMap, routing::post, Json, Router};
 use serde::Deserialize;
 
 use crate::error::ApiResult;
@@ -192,7 +187,11 @@ async fn handle_github_pr_event(
         stkd_db::MergeRequestState::Closed => stkd_db::BranchStatus::Closed,
         _ => stkd_db::BranchStatus::Active,
     };
-    state.db().branches().update_status(branch.id, branch_status).await?;
+    state
+        .db()
+        .branches()
+        .update_status(branch.id, branch_status)
+        .await?;
     state.db().branches().set_mr(branch.id, Some(mr.id)).await?;
 
     Ok(())
@@ -249,7 +248,10 @@ async fn handle_gitlab_mr_event(
         .await?;
 
     let Some(db_repo) = db_repo else {
-        tracing::debug!("Repository {} not found in database", project.path_with_namespace);
+        tracing::debug!(
+            "Repository {} not found in database",
+            project.path_with_namespace
+        );
         return Ok(());
     };
 
@@ -305,8 +307,16 @@ async fn handle_gitlab_mr_event(
         stkd_db::MergeRequestState::Closed => stkd_db::BranchStatus::Closed,
         _ => stkd_db::BranchStatus::Active,
     };
-    state.db().branches().update_status(branch.id, branch_status).await?;
-    state.db().branches().set_mr(branch.id, Some(db_mr.id)).await?;
+    state
+        .db()
+        .branches()
+        .update_status(branch.id, branch_status)
+        .await?;
+    state
+        .db()
+        .branches()
+        .set_mr(branch.id, Some(db_mr.id))
+        .await?;
 
     Ok(())
 }

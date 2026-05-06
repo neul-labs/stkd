@@ -50,7 +50,7 @@ pub struct PullRequestCreate {
 }
 
 /// Request to update a pull request
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct PullRequestUpdate {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
@@ -123,10 +123,16 @@ impl GitHubClient {
 
     /// Close a pull request
     pub async fn close_pr(&self, owner: &str, repo: &str, number: u64) -> Result<PullRequest> {
-        self.update_pr(owner, repo, number, &PullRequestUpdate {
-            state: Some("closed".to_string()),
-            ..Default::default()
-        }).await
+        self.update_pr(
+            owner,
+            repo,
+            number,
+            &PullRequestUpdate {
+                state: Some("closed".to_string()),
+                ..Default::default()
+            },
+        )
+        .await
     }
 }
 
@@ -154,17 +160,6 @@ pub struct MergeResult {
     pub sha: String,
     pub merged: bool,
     pub message: String,
-}
-
-impl Default for PullRequestUpdate {
-    fn default() -> Self {
-        Self {
-            title: None,
-            body: None,
-            base: None,
-            state: None,
-        }
-    }
 }
 
 /// Generate stack visualization for PR body

@@ -123,7 +123,11 @@ impl Repository {
 
         let config = storage.load_config()?;
 
-        Ok(Self { git, storage, config })
+        Ok(Self {
+            git,
+            storage,
+            config,
+        })
     }
 
     /// Initialize Stack in an existing Git repository.
@@ -161,7 +165,11 @@ impl Repository {
 
         info!("Initialized Stack with trunk: {}", config.trunk);
 
-        Ok(Self { git, storage, config })
+        Ok(Self {
+            git,
+            storage,
+            config,
+        })
     }
 
     /// Initialize Stack with a custom configuration.
@@ -196,7 +204,11 @@ impl Repository {
 
         info!("Initialized Stack with trunk: {}", config.trunk);
 
-        Ok(Self { git, storage, config })
+        Ok(Self {
+            git,
+            storage,
+            config,
+        })
     }
 
     /// Get the underlying Git repository
@@ -308,7 +320,8 @@ impl Repository {
 
         // Checkout the new branch
         self.git.set_head(&format!("refs/heads/{}", name))?;
-        self.git.checkout_head(Some(git2::build::CheckoutBuilder::new().force()))?;
+        self.git
+            .checkout_head(Some(git2::build::CheckoutBuilder::new().force()))?;
 
         // Create and save branch info
         let mut info = BranchInfo::new(name, &parent);
@@ -488,7 +501,11 @@ impl Repository {
 
         let mut target = current.clone();
         for _ in 0..steps {
-            if let Some(entry) = stack.iter().find(|e| e.name() == target).and_then(|_| stack.up()) {
+            if let Some(entry) = stack
+                .iter()
+                .find(|e| e.name() == target)
+                .and_then(|_| stack.up())
+            {
                 target = entry.name().to_string();
             } else {
                 return Err(Error::other("Already at stack tip"));
@@ -510,7 +527,11 @@ impl Repository {
 
         let mut target = current.clone();
         for _ in 0..steps {
-            if let Some(entry) = stack.iter().find(|e| e.name() == target).and_then(|_| stack.down()) {
+            if let Some(entry) = stack
+                .iter()
+                .find(|e| e.name() == target)
+                .and_then(|_| stack.down())
+            {
                 target = entry.name().to_string();
             } else {
                 return Err(Error::other("Already at stack root"));
@@ -560,7 +581,8 @@ impl Repository {
         debug!("Checking out {}", name);
 
         self.git.set_head(&format!("refs/heads/{}", name))?;
-        self.git.checkout_head(Some(git2::build::CheckoutBuilder::new().force()))?;
+        self.git
+            .checkout_head(Some(git2::build::CheckoutBuilder::new().force()))?;
 
         Ok(())
     }
@@ -676,7 +698,13 @@ mod tests {
         let (_dir, repo) = setup_repo();
 
         // Create a branch without tracking
-        repo.git().branch("untracked", &repo.git().head().unwrap().peel_to_commit().unwrap(), false).unwrap();
+        repo.git()
+            .branch(
+                "untracked",
+                &repo.git().head().unwrap().peel_to_commit().unwrap(),
+                false,
+            )
+            .unwrap();
 
         let info = repo.track_branch("untracked").unwrap();
         assert_eq!(info.name, "untracked");

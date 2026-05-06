@@ -41,12 +41,12 @@ pub use pool::{create_pool, DatabasePool};
 
 // Re-export models
 pub use models::{
-    Branch, BranchStatus, MergeRequest, MergeRequestState, Membership, MembershipRole,
+    Branch, BranchStatus, Membership, MembershipRole, MergeRequest, MergeRequestState,
     Organization, Repository, Session, User,
 };
 
 // Re-export repository traits
 pub use repositories::{
-    BranchRepository, MergeRequestRepository, MembershipRepository, OrganizationRepository,
+    BranchRepository, MembershipRepository, MergeRequestRepository, OrganizationRepository,
     RepositoryRepository, SessionRepository, UserRepository,
 };
