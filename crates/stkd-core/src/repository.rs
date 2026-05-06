@@ -662,6 +662,16 @@ mod tests {
         // Initialize Git repo
         let git = GitRepo::init(dir.path()).unwrap();
 
+        // Configure git user (required for commits in CI)
+        git.config()
+            .unwrap()
+            .set_str("user.name", "Test User")
+            .unwrap();
+        git.config()
+            .unwrap()
+            .set_str("user.email", "test@example.com")
+            .unwrap();
+
         // Create initial commit
         {
             let sig = git.signature().unwrap();
