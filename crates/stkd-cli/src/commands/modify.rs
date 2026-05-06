@@ -31,10 +31,10 @@ pub async fn execute(args: ModifyArgs) -> Result<()> {
         }
     } else {
         cmd.args(["commit", "--amend"]);
-        if args.no_edit {
-            cmd.arg("--no-edit");
-        } else if let Some(msg) = &args.message {
+        if let Some(msg) = &args.message {
             cmd.args(["-m", msg]);
+        } else {
+            cmd.arg("--no-edit");
         }
     }
 
