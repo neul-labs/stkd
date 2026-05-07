@@ -25,9 +25,6 @@ jobs:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
             binary: gt
-          - target: x86_64-apple-darwin
-            os: macos-latest
-            binary: gt
           - target: aarch64-apple-darwin
             os: macos-latest
             binary: gt
