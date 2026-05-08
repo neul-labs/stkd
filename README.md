@@ -26,8 +26,8 @@ When you update a branch, Stack automatically rebases all dependent branches. Wh
 ## Installation
 
 ```bash
-# Quick install (downloads binary or builds from source)
-curl -fsSL https://raw.githubusercontent.com/neul-labs/stkd/main/install.sh | bash
+# macOS / Linux (Homebrew)
+brew install neul-labs/tap/stkd
 
 # Or install from crates.io
 cargo install stkd-cli
@@ -37,6 +37,9 @@ npm install -g stkd-cli
 
 # Or via pip
 pip install stkd-cli
+
+# Or quick install (downloads binary or builds from source)
+curl -fsSL https://raw.githubusercontent.com/neul-labs/stkd/main/install.sh | bash
 
 # Or build from source
 cargo install --path crates/stkd-cli

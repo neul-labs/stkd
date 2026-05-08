@@ -2,14 +2,14 @@
 
 Stack is available through various package managers for different platforms.
 
-## Homebrew (macOS/Linux)
+## Homebrew (macOS / Linux)
 
 ```bash
 # Install
-brew install neul-labs/tap/stack
+brew install neul-labs/tap/stkd
 
 # Update
-brew upgrade stack
+brew upgrade stkd
 ```
 
 ## Cargo (Cross-platform)
@@ -22,6 +22,26 @@ cargo install stkd-cli
 cargo install stkd-cli --force
 ```
 
+## npm (Cross-platform)
+
+```bash
+# Install
+npm install -g stkd-cli
+
+# Update
+npm update -g stkd-cli
+```
+
+## pip (Cross-platform)
+
+```bash
+# Install
+pip install stkd-cli
+
+# Update
+pip install --upgrade stkd-cli
+```
+
 ## Binary Download
 
 Pre-built binaries are available for each release:
@@ -32,11 +52,9 @@ Visit the [Releases](https://github.com/neul-labs/stkd/releases) page and downlo
 
 | Platform | Architecture | Download |
 |----------|--------------|----------|
-| Linux | x86_64 | `stack-x86_64-unknown-linux-gnu.tar.gz` |
-| Linux | aarch64 | `stack-aarch64-unknown-linux-gnu.tar.gz` |
-| macOS | x86_64 | `stack-x86_64-apple-darwin.tar.gz` |
-| macOS | Apple Silicon | `stack-aarch64-apple-darwin.tar.gz` |
-| Windows | x86_64 | `stack-x86_64-pc-windows-msvc.zip` |
+| Linux | x86_64 | `gt-x86_64-unknown-linux-gnu.tar.gz` |
+| macOS | Apple Silicon | `gt-aarch64-apple-darwin.tar.gz` |
+| Windows | x86_64 | `gt-x86_64-pc-windows-msvc.zip` |
 
 ### Installation Steps
 
@@ -44,8 +62,8 @@ Visit the [Releases](https://github.com/neul-labs/stkd/releases) page and downlo
 
 ```bash
 # Download and extract
-curl -LO https://github.com/neul-labs/stkd/releases/latest/download/stack-x86_64-unknown-linux-gnu.tar.gz
-tar xzf stack-x86_64-unknown-linux-gnu.tar.gz
+curl -LO https://github.com/neul-labs/stkd/releases/latest/download/gt-x86_64-unknown-linux-gnu.tar.gz
+tar xzf gt-x86_64-unknown-linux-gnu.tar.gz
 
 # Move to PATH
 sudo mv gt /usr/local/bin/
@@ -58,10 +76,10 @@ gt --version
 
 ```powershell
 # Download
-Invoke-WebRequest -Uri "https://github.com/neul-labs/stkd/releases/latest/download/stack-x86_64-pc-windows-msvc.zip" -OutFile "stack.zip"
+Invoke-WebRequest -Uri "https://github.com/neul-labs/stkd/releases/latest/download/gt-x86_64-pc-windows-msvc.zip" -OutFile "gt.zip"
 
 # Extract
-Expand-Archive -Path "stack.zip" -DestinationPath "C:\Program Files\Stack"
+Expand-Archive -Path "gt.zip" -DestinationPath "C:\Program Files\Stack"
 
 # Add to PATH (run as Administrator)
 [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\Stack", "Machine")
@@ -101,8 +119,8 @@ All release binaries are signed. You can verify the signature:
 
 ```bash
 # Download the signature
-curl -LO https://github.com/neul-labs/stkd/releases/latest/download/stack-x86_64-unknown-linux-gnu.tar.gz.sig
+curl -LO https://github.com/neul-labs/stkd/releases/latest/download/gt-x86_64-unknown-linux-gnu.tar.gz.sig
 
 # Verify (requires GPG and our public key)
-gpg --verify stack-x86_64-unknown-linux-gnu.tar.gz.sig stack-x86_64-unknown-linux-gnu.tar.gz
+gpg --verify gt-x86_64-unknown-linux-gnu.tar.gz.sig gt-x86_64-unknown-linux-gnu.tar.gz
 ```

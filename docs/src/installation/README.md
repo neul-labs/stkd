@@ -11,23 +11,33 @@ Before installing Stack, ensure you have:
 
 ## Quick Install
 
-The fastest way to get started is to build from source:
+The fastest way to get started depends on your platform:
 
 ```bash
-cargo install --git https://github.com/neul-labs/stkd stkd-cli
-```
+# macOS / Linux (Homebrew)
+brew install neul-labs/tap/stkd
 
-This installs the `gt` command globally.
+# Any platform (Cargo)
+cargo install stkd-cli
+
+# Any platform (npm)
+npm install -g stkd-cli
+
+# Any platform (pip)
+pip install stkd-cli
+```
 
 ## Installation Methods
 
 Choose the method that works best for you:
 
-| Method | Command |
-|--------|---------|
-| [From Source](./from-source.md) | `cargo install` |
-| [Homebrew](./package-managers.md#homebrew) | `brew install stack` |
-| [Binary Download](./package-managers.md#binary-download) | Download from releases |
+| Method | Command | Platforms |
+|--------|---------|-----------|
+| [Homebrew](./package-managers.md#homebrew) | `brew install neul-labs/tap/stkd` | macOS, Linux |
+| [Cargo](./from-source.md) | `cargo install stkd-cli` | Any |
+| [npm](./package-managers.md#npm) | `npm install -g stkd-cli` | Any (Node.js) |
+| [pip](./package-managers.md#pip) | `pip install stkd-cli` | Any (Python) |
+| [Binary Download](./package-managers.md#binary-download) | Download from releases | Linux, macOS, Windows |
 
 ## Verify Installation
 

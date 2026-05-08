@@ -101,6 +101,7 @@ jobs:
   publish-npm:
     name: Publish to npm
     needs: release
+    if: github.repository == 'neul-labs/stkd'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -128,6 +129,7 @@ jobs:
   publish-pypi:
     name: Publish to PyPI
     needs: release
+    if: github.repository == 'neul-labs/stkd'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

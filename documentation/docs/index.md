@@ -57,10 +57,28 @@ gt sync  # Automatically rebases the stack
 
 ## Installation
 
-=== "Cargo (Recommended)"
+=== "Homebrew (macOS / Linux)"
+
+    ```bash
+    brew install neul-labs/tap/stkd
+    ```
+
+=== "Cargo"
 
     ```bash
     cargo install stkd-cli
+    ```
+
+=== "npm"
+
+    ```bash
+    npm install -g stkd-cli
+    ```
+
+=== "pip"
+
+    ```bash
+    pip install stkd-cli
     ```
 
 === "From Source"
@@ -77,9 +95,3 @@ gt sync  # Automatically rebases the stack
 2. **[Quick Start](getting-started/quickstart.md)** - Get up and running in 5 minutes
 3. **[First Stack](getting-started/first-stack.md)** - Create your first stack of PRs
 4. **[Authentication](getting-started/authentication.md)** - Connect to GitHub or GitLab
-
-## Need Help?
-
-- Check the [FAQ](reference/faq.md) for common questions
-- See [Troubleshooting](reference/troubleshooting.md) for solutions
-- [Open an issue](https://github.com/neul-labs/stkd/issues) on GitHub
