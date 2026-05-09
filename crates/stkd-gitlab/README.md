@@ -1,12 +1,27 @@
 # stkd-gitlab
 
-[![crates.io](https://img.shields.io/crates/v/stkd-gitlab)](https://crates.io/crates/stkd-gitlab)
-[![docs.rs](https://img.shields.io/badge/docs.rs-stkd--gitlab-blue)](https://docs.rs/stkd-gitlab)
+[![crates.io](https://img.shields.io/crates/v/stkd-gitlab.svg)](https://crates.io/crates/stkd-gitlab)
+[![docs.rs](https://docs.rs/stkd-gitlab/badge.svg)](https://docs.rs/stkd-gitlab)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-GitLab integration for [Stack](https://github.com/neul-labs/stkd) — stacked diffs for Git.
+**GitLab integration for Stack** — full support for GitLab merge requests, pipelines, reviews, and self-hosted instances.
 
-This crate implements the Stack provider API for GitLab, including self-hosted instances. It supports authentication via personal access tokens, OAuth, and job tokens, and provides operations for creating and managing merge requests, checking CI/CD pipelines, and handling reviews.
+`stkd-gitlab` implements the Stack provider API for GitLab, including self-hosted instances. It supports authentication via personal access tokens, OAuth, and job tokens, and provides operations for creating and managing merge requests, checking CI/CD pipelines, and handling reviews.
+
+---
+
+## What is Stack?
+
+Stack is an open-source, **Graphite-compatible** CLI for managing stacked pull requests on GitHub and GitLab. `stkd-gitlab` provides the GitLab-specific implementation that enables Stack to create, update, and merge merge requests — including on self-hosted GitLab instances.
+
+## Features
+
+- **Personal Access Token** auth
+- **OAuth** and **CI job token** support
+- **Self-hosted GitLab** support
+- **Merge Request** create, update, merge, close
+- **Pipeline** status checks
+- **Review** requests and discussions
 
 ## Installation
 
@@ -45,15 +60,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-## Features
+## Related Crates
 
-- **Personal Access Token** auth
-- **OAuth** and **CI job token** support
-- **Self-hosted GitLab** support
-- **Merge Request** create, update, merge, close
-- **Pipeline** status checks
-- **Review** requests and discussions
+- [`stkd-provider-api`](https://crates.io/crates/stkd-provider-api) — Provider trait definitions
+- [`stkd-core`](https://crates.io/crates/stkd-core) — Core library
+- [`stkd-cli`](https://crates.io/crates/stkd-cli) — The main CLI binary
 
 ## License
 
-Apache-2.0. See the [repository](https://github.com/neul-labs/stkd) for details.
+Apache-2.0. See [LICENSE](https://github.com/neul-labs/stkd/blob/main/LICENSE) for details.

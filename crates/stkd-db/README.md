@@ -1,12 +1,25 @@
 # stkd-db
 
-[![crates.io](https://img.shields.io/crates/v/stkd-db)](https://crates.io/crates/stkd-db)
-[![docs.rs](https://img.shields.io/badge/docs.rs-stkd--db-blue)](https://docs.rs/stkd-db)
+[![crates.io](https://img.shields.io/crates/v/stkd-db.svg)](https://crates.io/crates/stkd-db)
+[![docs.rs](https://docs.rs/stkd-db/badge.svg)](https://docs.rs/stkd-db)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-Database abstraction layer for [Stack](https://github.com/neul-labs/stkd) — supports SQLite and PostgreSQL.
+**Database abstraction layer for Stack** — SQLite and PostgreSQL support with type-safe queries via sqlx.
 
-This crate provides the database layer used by the Stack web server for persistent storage of organizations, repositories, stacks, branches, and user data. It uses `sqlx` for async, compile-time-checked database access and includes migration support.
+`stkd-db` provides the database layer used by the Stack web server for persistent storage of organizations, repositories, stacks, branches, and user data. It uses `sqlx` for async, compile-time-checked database access and includes migration support.
+
+---
+
+## What is Stack?
+
+Stack is an open-source, **Graphite-compatible** CLI for managing stacked pull requests on GitHub and GitLab. `stkd-db` powers the self-hosted Stack dashboard's persistent storage layer.
+
+## Features
+
+- **SQLite** — Embedded, file-based storage (default)
+- **PostgreSQL** — Production-ready async connections
+- **Migrations** — Automatic schema versioning on startup
+- **Type-safe queries** — Compile-time checked via `sqlx`
 
 ## Installation
 
@@ -31,13 +44,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-## Features
+## Related Crates
 
-- **SQLite** — Embedded, file-based storage (default)
-- **PostgreSQL** — Production-ready async connections
-- **Migrations** — Automatic schema versioning on startup
-- **Type-safe queries** — Compile-time checked via `sqlx`
+- [`stkd-server`](https://crates.io/crates/stkd-server) — Web dashboard API server
+- [`stkd-core`](https://crates.io/crates/stkd-core) — Core library
 
 ## License
 
-Apache-2.0. See the [repository](https://github.com/neul-labs/stkd) for details.
+Apache-2.0. See [LICENSE](https://github.com/neul-labs/stkd/blob/main/LICENSE) for details.
