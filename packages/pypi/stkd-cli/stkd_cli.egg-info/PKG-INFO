@@ -1,0 +1,141 @@
+Metadata-Version: 2.4
+Name: stkd-cli
+Version: 0.1.0
+Summary: Stack CLI - Stacked diffs for Git
+Home-page: https://github.com/neul-labs/stkd
+Author: Neul Labs
+Author-email: Neul Labs <hello@neullabs.com>
+License: Apache-2.0
+Project-URL: Homepage, https://docs.neullabs.com/stkd
+Project-URL: Repository, https://github.com/neul-labs/stkd
+Project-URL: Issues, https://github.com/neul-labs/stkd/issues
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Rust
+Classifier: Topic :: Software Development :: Version Control :: Git
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Dynamic: author
+Dynamic: home-page
+Dynamic: requires-python
+
+# stkd-cli
+
+[![PyPI](https://img.shields.io/pypi/v/stkd-cli.svg)](https://pypi.org/project/stkd-cli/)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+**Stack CLI distributed via PyPI** — Install the `gt` binary for managing stacked pull requests on GitHub and GitLab.
+
+Stack is an open-source, Graphite-compatible CLI that breaks large changes into small, reviewable PRs that stay in sync automatically. This Python package downloads the correct prebuilt binary for your platform (macOS, Linux) and installs it as the `gt` command.
+
+---
+
+## What is Stack?
+
+Large pull requests are hard to review. **Stacked diffs** let you split work into a chain of dependent branches, each with its own focused PR:
+
+```
+main
+ └── feature/auth-base      PR #1: Core authentication
+      └── feature/auth-oauth    PR #2: OAuth support (depends on #1)
+           └── feature/auth-2fa     PR #3: 2FA (depends on #2)
+```
+
+When you update a branch, Stack automatically rebases all dependent branches. When PRs merge, the stack collapses cleanly.
+
+## Why Stacked Diffs?
+
+| Traditional PRs | Stacked Diffs |
+|----------------|---------------|
+| One large PR with many changes | Multiple small, focused PRs |
+| Reviewers overwhelmed | Easy to review incrementally |
+| All-or-nothing merging | Land changes as they're approved |
+| Blocked waiting for review | Unblock yourself, keep coding |
+
+## Features
+
+- **Auto-restack** — Edit any branch, all dependents rebase automatically
+- **GitHub + GitLab** — Full support for both platforms, including self-hosted GitLab
+- **Stack-aware submit** — One command creates PRs for your entire stack
+- **Interactive TUI** — Keyboard-driven terminal UI for browsing stacks
+- **MCP Server** — AI agent integration via Model Context Protocol
+- **Undo/redo** — Recover from mistakes with `gt undo`
+- **Graphite compatible** — Drop-in replacement for `gt` commands
+
+## Installation
+
+```bash
+pip install stkd-cli
+```
+
+### With uv
+
+```bash
+uv pip install stkd-cli
+```
+
+### In a virtual environment
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install stkd-cli
+```
+
+## Quick Start
+
+```bash
+# Initialize in your repository
+gt init
+
+# Authenticate with GitHub or GitLab
+gt auth --github
+
+# Create a stack
+gt create feature/step-1
+gt create feature/step-2
+gt create feature/step-3
+
+# Submit all as PRs
+gt submit --stack
+```
+
+## Platform Support
+
+- macOS (Intel & Apple Silicon)
+- Linux (x86_64 & aarch64)
+
+If a prebuilt binary is not available for your platform, the installer falls back to building from source with cargo.
+
+## Python API
+
+```python
+from stkd_cli import run, run_json
+
+# Run a command
+result = run(["log", "--json"])
+print(result.stdout)
+
+# Run and parse JSON
+stack = run_json(["log"])
+print(stack)
+```
+
+## Documentation
+
+Full documentation at **[docs.neullabs.com/stkd](https://docs.neullabs.com/stkd)**.
+
+## License
+
+Apache-2.0. See [LICENSE](https://github.com/neul-labs/stkd/blob/main/LICENSE) for details.
+
+Built by [Neul Labs](https://neullabs.com).

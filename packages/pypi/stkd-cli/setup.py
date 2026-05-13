@@ -68,7 +68,7 @@ def download_binary(target):
             z.extractall(extract_dir)
     else:
         with tarfile.open(archive_path, "r:gz") as t:
-            t.extractall(extract_dir)
+            t.extractall(extract_dir, filter="data")
 
     os.remove(archive_path)
 
@@ -105,6 +105,7 @@ class InstallCommand(install):
 
         # Install to scripts directory
         scripts_dir = os.path.join(self.install_scripts, os.path.basename(binary_path))
+        os.makedirs(self.install_scripts, exist_ok=True)
         shutil.copy2(binary_path, scripts_dir)
         os.chmod(scripts_dir, 0o755)
 
