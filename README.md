@@ -1,14 +1,14 @@
-# Stack
+# Stack CLI — Stacked Diffs for GitHub and GitLab (Graphite Alternative)
 
 [![CI](https://github.com/neul-labs/stkd/actions/workflows/ci.yml/badge.svg)](https://github.com/neul-labs/stkd/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/v/stkd-cli.svg)](https://crates.io/crates/stkd-cli)
+[![npm](https://img.shields.io/npm/v/stkd-cli.svg)](https://www.npmjs.com/package/stkd-cli)
+[![PyPI](https://img.shields.io/pypi/v/stkd-cli.svg)](https://pypi.org/project/stkd-cli/)
 [![docs.rs](https://docs.rs/stkd-cli/badge.svg)](https://docs.rs/stkd-cli)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Docs](https://img.shields.io/badge/docs-neullabs.com-green.svg)](https://docs.neullabs.com/stkd)
 
-**Stacked diffs. Simplified.**
-
-Stack is an open-source CLI for managing stacked pull requests on GitHub and GitLab. Break large changes into small, reviewable PRs that stay in sync automatically.
+**Stacked diffs. Simplified.** An open-source, Graphite-compatible CLI for managing stacked pull requests on GitHub and GitLab. Break large changes into small, reviewable PRs that stay in sync automatically. Self-hosted. Multi-platform. AI-ready.
 
 ## Why Stacked Diffs?
 

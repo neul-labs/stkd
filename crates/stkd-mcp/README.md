@@ -1,4 +1,4 @@
-# stkd-mcp
+# stkd-mcp — MCP Server for AI Agents (Stack / Stacked Diffs)
 
 [![crates.io](https://img.shields.io/crates/v/stkd-mcp.svg)](https://crates.io/crates/stkd-mcp)
 [![docs.rs](https://docs.rs/stkd-mcp/badge.svg)](https://docs.rs/stkd-mcp)

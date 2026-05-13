@@ -1,4 +1,4 @@
-# stkd-github
+# stkd-github — GitHub Pull Request Automation for Stack
 
 [![crates.io](https://img.shields.io/crates/v/stkd-github.svg)](https://crates.io/crates/stkd-github)
 [![docs.rs](https://docs.rs/stkd-github/badge.svg)](https://docs.rs/stkd-github)

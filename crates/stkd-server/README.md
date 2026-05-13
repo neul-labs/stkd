@@ -1,4 +1,4 @@
-# stkd-server
+# stkd-server — Self-Hosted Web Dashboard API for Stack
 
 [![crates.io](https://img.shields.io/crates/v/stkd-server.svg)](https://crates.io/crates/stkd-server)
 [![docs.rs](https://docs.rs/stkd-server/badge.svg)](https://docs.rs/stkd-server)

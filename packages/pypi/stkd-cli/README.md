@@ -1,4 +1,4 @@
-# stkd-cli
+# stkd-cli — Stack CLI for Stacked Pull Requests (pip install gt)
 
 [![PyPI](https://img.shields.io/pypi/v/stkd-cli.svg)](https://pypi.org/project/stkd-cli/)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)

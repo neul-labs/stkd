@@ -1,4 +1,4 @@
-# stkd-engine
+# stkd-engine — Programmatic API for Stacked Diffs & CI Integration
 
 [![crates.io](https://img.shields.io/crates/v/stkd-engine.svg)](https://crates.io/crates/stkd-engine)
 [![docs.rs](https://docs.rs/stkd-engine/badge.svg)](https://docs.rs/stkd-engine)

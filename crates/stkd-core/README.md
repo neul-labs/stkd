@@ -1,4 +1,4 @@
-# stkd-core
+# stkd-core — Core Library for Stacked Diffs (Stack CLI)
 
 [![crates.io](https://img.shields.io/crates/v/stkd-core.svg)](https://crates.io/crates/stkd-core)
 [![docs.rs](https://docs.rs/stkd-core/badge.svg)](https://docs.rs/stkd-core)

@@ -1,4 +1,4 @@
-# stkd-gitlab
+# stkd-gitlab — GitLab Merge Request Automation for Stack
 
 [![crates.io](https://img.shields.io/crates/v/stkd-gitlab.svg)](https://crates.io/crates/stkd-gitlab)
 [![docs.rs](https://docs.rs/stkd-gitlab/badge.svg)](https://docs.rs/stkd-gitlab)

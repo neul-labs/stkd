@@ -1,4 +1,4 @@
-# stkd-tui
+# stkd-tui — Interactive Terminal UI for Stacked Diffs
 
 [![crates.io](https://img.shields.io/crates/v/stkd-tui.svg)](https://crates.io/crates/stkd-tui)
 [![docs.rs](https://docs.rs/stkd-tui/badge.svg)](https://docs.rs/stkd-tui)

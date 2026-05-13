@@ -1,4 +1,4 @@
-# stkd-db
+# stkd-db — SQLite / PostgreSQL Database Layer for Stack
 
 [![crates.io](https://img.shields.io/crates/v/stkd-db.svg)](https://crates.io/crates/stkd-db)
 [![docs.rs](https://docs.rs/stkd-db/badge.svg)](https://docs.rs/stkd-db)

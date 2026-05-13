@@ -1,4 +1,4 @@
-# stkd-cli
+# stkd-cli — Stack CLI for Stacked Pull Requests (npm install gt)
 
 [![npm](https://img.shields.io/npm/v/stkd-cli.svg)](https://www.npmjs.com/package/stkd-cli)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)

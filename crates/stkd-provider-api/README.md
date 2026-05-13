@@ -1,4 +1,4 @@
-# stkd-provider-api
+# stkd-provider-api — Pluggable Git Hosting Provider API (GitHub, GitLab)
 
 [![crates.io](https://img.shields.io/crates/v/stkd-provider-api.svg)](https://crates.io/crates/stkd-provider-api)
 [![docs.rs](https://docs.rs/stkd-provider-api/badge.svg)](https://docs.rs/stkd-provider-api)
