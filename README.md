@@ -1,10 +1,10 @@
+# Stack
+
 [![CI](https://github.com/neul-labs/stkd/actions/workflows/ci.yml/badge.svg)](https://github.com/neul-labs/stkd/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/v/stkd-cli.svg)](https://crates.io/crates/stkd-cli)
 [![docs.rs](https://docs.rs/stkd-cli/badge.svg)](https://docs.rs/stkd-cli)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Docs](https://img.shields.io/badge/docs-neullabs.com-green.svg)](https://docs.neullabs.com/stkd)
-
-# Stack
 
 **Stacked diffs. Simplified.**
 
