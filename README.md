@@ -1,4 +1,4 @@
-# Stack CLI — Stacked Diffs for GitHub and GitLab (Graphite Alternative)
+# Stack CLI — Stacked Diffs for GitHub and GitLab
 
 [![CI](https://github.com/neul-labs/stkd/actions/workflows/ci.yml/badge.svg)](https://github.com/neul-labs/stkd/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/v/stkd-cli.svg)](https://crates.io/crates/stkd-cli)
