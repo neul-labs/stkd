@@ -162,11 +162,11 @@ jobs:
       - name: Update npm version
         run: |
           VERSION=${GITHUB_REF_NAME#v}
-          cd npm/stkd-cli
+          cd packages/npm/stkd-cli
           npm version "$VERSION" --no-git-tag-version
 
       - name: Publish npm package
-        run: cd npm/stkd-cli && npm publish --provenance --access public
+        run: cd packages/npm/stkd-cli && npm publish --provenance --access public
 
   # ---------------------------------------------------------------------------
   # Publish PyPI package
@@ -195,16 +195,16 @@ jobs:
       - name: Update PyPI version
         run: |
           VERSION=${GITHUB_REF_NAME#v}
-          cd pypi/stkd-cli
+          cd packages/pypi/stkd-cli
           sed -i "s/version=.*/version=\"$VERSION\",/" setup.py
 
       - name: Build PyPI package
-        run: cd pypi/stkd-cli && python -m build
+        run: cd packages/pypi/stkd-cli && python -m build
 
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: pypi/stkd-cli/dist
+          packages-dir: packages/pypi/stkd-cli/dist
 
   # ---------------------------------------------------------------------------
   # Update Homebrew formula in neul-labs/homebrew-tap
