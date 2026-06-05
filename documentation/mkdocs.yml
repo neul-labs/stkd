@@ -1,8 +1,9 @@
 site_name: Stack Documentation
 site_description: Stacked Diffs for Git - A Graphite-compatible CLI tool
-site_url: https://docs.neullabs.com/stkd
+site_url: https://stkd.docs.neullabs.com/
 repo_url: https://github.com/neul-labs/stkd
 repo_name: neul-labs/stkd
+edit_uri: edit/main/documentation/docs/
 
 theme:
   name: material
