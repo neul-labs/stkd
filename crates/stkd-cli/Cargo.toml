@@ -6,9 +6,11 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
-description = "CLI for Stkd - stacked diffs for Git"
+description = "Stacked diffs for GitHub and GitLab — a Graphite-compatible CLI (gt) for managing stacked pull requests."
 readme.workspace = true
 authors.workspace = true
+keywords = ["git", "stacked-diffs", "pull-requests", "github", "graphite"]
+categories = ["command-line-utilities", "development-tools"]
 
 [[bin]]
 name = "gt"

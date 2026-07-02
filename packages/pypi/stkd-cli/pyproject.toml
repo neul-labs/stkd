@@ -9,8 +9,9 @@ description = "Stack CLI - Stacked diffs for Git"
 readme = "README.md"
 license = {text = "Apache-2.0"}
 authors = [
-    {name = "Neul Labs", email = "hello@neullabs.com"},
+    {name = "Neul Labs", email = "contact@neullabs.com"},
 ]
+keywords = ["git", "stacked-diffs", "pull-requests", "github", "gitlab", "graphite", "cli"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
@@ -32,6 +33,7 @@ requires-python = ">=3.8"
 gt = "stkd_cli:main"
 
 [project.urls]
-Homepage = "https://docs.neullabs.com/stkd"
+Homepage = "https://stkd.neullabs.com"
+Documentation = "https://docs.neullabs.com/stkd"
 Repository = "https://github.com/neul-labs/stkd"
 Issues = "https://github.com/neul-labs/stkd/issues"

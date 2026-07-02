@@ -8,6 +8,8 @@
 
 **Stack** is an open-source CLI for managing **stacked pull requests** on GitHub and GitLab. Break large changes into small, reviewable PRs that stay in sync automatically. Stack is **Graphite-compatible** (the binary is named `gt`) and supports GitHub, GitLab, and self-hosted GitLab instances.
 
+**[Website](https://stkd.neullabs.com)** · **[Documentation](https://docs.neullabs.com/stkd)** · **[GitHub](https://github.com/neul-labs/stkd)**
+
 ---
 
 ## What is Stack?
@@ -159,8 +161,22 @@ Full documentation at **[docs.neullabs.com/stkd](https://docs.neullabs.com/stkd)
 - [Web Dashboard](https://docs.neullabs.com/stkd/guides/dashboard)
 - [Migrating from Graphite](https://docs.neullabs.com/stkd/guides/migration-graphite)
 
+## Part of the Neul Labs toolchain
+
+Explore the rest of the Neul Labs developer tools:
+
+| Project | Description |
+| --- | --- |
+| [rjest](https://github.com/neul-labs/rjest) | A blazing-fast, Jest-compatible test runner — 100x faster warm runs. |
+| [rpytest](https://github.com/neul-labs/rpytest) | Run your pytest suite faster. Change nothing. |
+| [rninja](https://github.com/neul-labs/rninja) | Drop-in Ninja replacement with built-in caching. |
+| [gity](https://github.com/neul-labs/gity) | Make large Git repositories feel instant. |
+| [grite](https://github.com/neul-labs/grite) | The issue tracker that lives in your repo. Built for AI agents. |
+
+Learn more at [neullabs.com](https://www.neullabs.com).
+
 ## License
 
 Apache-2.0. See [LICENSE](https://github.com/neul-labs/stkd/blob/main/LICENSE) for details.
 
-Built by [Neul Labs](https://neullabs.com).
+Built by [Neul Labs](https://www.neullabs.com).

@@ -10,6 +10,8 @@
 
 **Stacked diffs. Simplified.** An open-source, Graphite-compatible CLI for managing stacked pull requests on GitHub and GitLab. Break large changes into small, reviewable PRs that stay in sync automatically. Self-hosted. Multi-platform. AI-ready.
 
+**[Website](https://stkd.neullabs.com)** · **[Documentation](https://docs.neullabs.com/stkd)** · **[GitHub](https://github.com/neul-labs/stkd)**
+
 ## Why Stacked Diffs?
 
 Large PRs are hard to review. Stacked diffs let you split work into a chain of dependent branches, each with its own focused PR:
@@ -170,10 +172,24 @@ cargo test
 
 See [CONTRIBUTING.md](docs/src/contributing/guidelines.md) for guidelines.
 
+## Part of the Neul Labs toolchain
+
+Explore the rest of the Neul Labs developer tools:
+
+| Project | Description |
+| --- | --- |
+| [rjest](https://github.com/neul-labs/rjest) | A blazing-fast, Jest-compatible test runner — 100x faster warm runs. |
+| [rpytest](https://github.com/neul-labs/rpytest) | Run your pytest suite faster. Change nothing. |
+| [rninja](https://github.com/neul-labs/rninja) | Drop-in Ninja replacement with built-in caching. |
+| [gity](https://github.com/neul-labs/gity) | Make large Git repositories feel instant. |
+| [grite](https://github.com/neul-labs/grite) | The issue tracker that lives in your repo. Built for AI agents. |
+
+Learn more at [neullabs.com](https://www.neullabs.com).
+
 ## License
 
 Apache-2.0 - See [LICENSE](LICENSE) for details.
 
 ---
 
-Built by [Neul Labs](https://neullabs.com)
+Built by [Neul Labs](https://www.neullabs.com)
