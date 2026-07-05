@@ -16,7 +16,7 @@ members = [
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-license = "Apache-2.0"
+license = "MIT"
 repository = "https://github.com/neul-labs/stkd"
 homepage = "https://stkd.neullabs.com"
 documentation = "https://docs.neullabs.com/stkd"
